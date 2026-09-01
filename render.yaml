@@ -22,7 +22,7 @@ services:
       - key: APP_URL
         value: https://pricepilot-app.onrender.com
       - key: API_URL
-        value: https://pricepilot-api.onrender.com
+        value: https://pricepilot-api-cfl6.onrender.com
       # Fill these in from the Render dashboard after the service is created
       # (kept out of this file so secrets never get committed to git).
       - key: DATABASE_URL

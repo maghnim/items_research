@@ -1,5 +1,5 @@
 // Update PRODUCTION_API_URL after deploying the backend (see DEPLOY.md).
-const PRODUCTION_API_URL = 'https://pricepilot-api.onrender.com/api';
+const PRODUCTION_API_URL = 'https://pricepilot-api-cfl6.onrender.com/api';
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   ? 'http://localhost:4000/api'
