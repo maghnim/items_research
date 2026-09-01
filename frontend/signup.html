@@ -1,0 +1,43 @@
+<title>Start your free trial — PricePilot</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="css/style.css" />
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="logo"><span class="logo-mark">P</span> PricePilot</a>
+    <div class="header-actions">
+      <span style="font-size:14px;color:#64748b;">Already have an account?</span>
+      <a href="login.html" class="btn btn-outline">Log in</a>
+    </div>
+  </div>
+</header>
+
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1>Start your free trial</h1>
+    <p class="sub">14 days free. No credit card required.</p>
+
+    <div class="form-msg" id="form-msg"></div>
+
+    <form id="signup-form">
+      <div class="field">
+        <label for="email">Work email</label>
+        <input type="email" id="email" required autocomplete="email" placeholder="you@company.com" />
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input type="password" id="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Create account</button>
+    </form>
+
+    <p class="auth-switch">Already tracking prices with us? <a href="login.html">Log in</a></p>
+    <p style="font-size:12.5px;color:#94a3b8;text-align:center;margin-top:18px;">
+      By signing up you agree to our <a href="terms-of-service.html">Terms of Service</a> and <a href="privacy-policy.html">Privacy Policy</a>.
+    </p>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>

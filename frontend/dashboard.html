@@ -1,0 +1,102 @@
+<title>Dashboard — PricePilot</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="css/style.css" />
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="logo"><span class="logo-mark">P</span> PricePilot</a>
+    <div class="header-actions">
+      <span style="font-size:14px;color:#64748b;" id="user-email"></span>
+      <button class="btn btn-outline" onclick="logout()">Log out</button>
+    </div>
+  </div>
+</header>
+
+<div class="dash-shell">
+  <aside class="dash-sidebar">
+    <a href="dashboard.html" class="active">Tracked products</a>
+    <a href="pricing.html">Billing &amp; plans</a>
+    <a href="#" onclick="openBillingPortal(); return false;">Manage subscription</a>
+    <a href="contact.html">Support</a>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-header">
+      <div>
+        <h1>Tracked products</h1>
+        <p>Monitor competitor prices and manage your alerts.</p>
+      </div>
+      <button class="btn btn-primary" id="open-add-modal">+ Add product</button>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card">
+        <div class="stat-label">Total products</div>
+        <div class="stat-value" id="stat-total">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Active</div>
+        <div class="stat-value" id="stat-active">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">With price data</div>
+        <div class="stat-value" id="stat-tracked">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Current plan</div>
+        <div class="stat-value" id="stat-plan">TRIAL</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Your competitors</h2>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Last price</th>
+            <th>Status</th>
+            <th>Last checked</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="products-tbody"></tbody>
+      </table>
+      <div id="products-empty" style="display:none; text-align:center; padding:40px 0; color:#64748b;">
+        <p>No products tracked yet. Add your first competitor URL to get started.</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-backdrop" id="add-product-modal">
+  <div class="modal">
+    <h2>Track a new product</h2>
+    <div class="form-msg" id="add-product-msg"></div>
+    <form id="add-product-form">
+      <div class="field">
+        <label for="product-url">Product URL</label>
+        <input type="url" id="product-url" required placeholder="https://competitor.com/products/example" />
+      </div>
+      <div class="field">
+        <label for="product-nickname">Nickname (optional)</label>
+        <input type="text" id="product-nickname" placeholder="e.g. Competitor X — Blue Hoodie" />
+      </div>
+      <div class="field">
+        <label for="product-threshold">Only alert if price changes by at least (%)</label>
+        <input type="number" id="product-threshold" min="0" step="0.5" placeholder="0" />
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-outline" id="close-add-modal">Cancel</button>
+        <button type="submit" class="btn btn-primary">Start tracking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script src="js/billing.js"></script>
+<script src="js/dashboard.js"></script>
