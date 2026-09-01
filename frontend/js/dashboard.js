@@ -34,9 +34,18 @@ function renderStats(products) {
   document.getElementById('stat-plan').textContent = (user?.plan_tier || 'trial').toUpperCase();
 }
 
+const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', MAD: 'DH', JPY: '¥', CHF: 'CHF', CAD: 'CA$', AUD: 'A$' };
+
+function formatPrice(amount, currency) {
+  const code = currency || 'USD';
+  const symbol = CURRENCY_SYMBOLS[code] || `${code} `;
+  const value = Number(amount).toFixed(2);
+  return code === 'MAD' ? `${value} ${symbol}` : `${symbol}${value}`;
+}
+
 function rowHtml(p) {
   const name = p.nickname || p.competitor_name || new URL(p.url).hostname;
-  const price = p.last_price !== null ? `$${Number(p.last_price).toFixed(2)}` : '—';
+  const price = p.last_price !== null ? formatPrice(p.last_price, p.last_currency) : '—';
   const status = p.is_active
     ? '<span class="badge badge-active">Active</span>'
     : '<span class="badge badge-inactive">Paused</span>';
@@ -98,6 +107,7 @@ if (addForm) {
     const url = document.getElementById('product-url').value.trim();
     const nickname = document.getElementById('product-nickname').value.trim();
     const threshold = document.getElementById('product-threshold').value;
+    const currency = document.getElementById('product-currency').value;
     const submitBtn = addForm.querySelector('button[type="submit"]');
 
     submitBtn.disabled = true;
@@ -106,7 +116,7 @@ if (addForm) {
     try {
       await api('/products', {
         method: 'POST',
-        body: { url, nickname, alert_threshold_pct: threshold ? Number(threshold) : 0 },
+        body: { url, nickname, alert_threshold_pct: threshold ? Number(threshold) : 0, currency: currency || undefined },
       });
       modal.classList.remove('open');
       addForm.reset();

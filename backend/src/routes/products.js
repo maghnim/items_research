@@ -16,7 +16,7 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { url, nickname, competitor_name, platform, price_selector, alert_threshold_pct } = req.body;
+  const { url, nickname, competitor_name, platform, price_selector, alert_threshold_pct, currency } = req.body;
   if (!url) {
     return res.status(400).json({ error: 'Product URL is required.' });
   }
@@ -37,9 +37,9 @@ router.post('/', async (req, res) => {
   }
 
   const result = await db.query(
-    `INSERT INTO tracked_products (user_id, url, nickname, competitor_name, platform, price_selector, alert_threshold_pct)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [req.userId, url, nickname || null, competitor_name || null, platform || 'auto', price_selector || null, alert_threshold_pct || 0]
+    `INSERT INTO tracked_products (user_id, url, nickname, competitor_name, platform, price_selector, alert_threshold_pct, currency_default)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+    [req.userId, url, nickname || null, competitor_name || null, platform || 'auto', price_selector || null, alert_threshold_pct || 0, currency || 'USD']
   );
 
   const product = result.rows[0];

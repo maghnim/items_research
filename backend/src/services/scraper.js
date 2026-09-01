@@ -1,6 +1,7 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const { detectPlatform, selectorsFor } = require('../utils/selectors');
+const { detectCurrencyFromPage, detectCurrencyFromText } = require('../utils/currency');
 
 const USER_AGENTS = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36',
@@ -29,17 +30,20 @@ function extractWithCheerio(html, product) {
   if (product.price_selector) candidates.push(product.price_selector);
   candidates.push(...selectorsFor(platform).price);
 
+  const pageCurrency = detectCurrencyFromPage($);
+
   for (const selector of candidates) {
     const el = $(selector).first();
     if (el.length) {
       const raw = el.attr('content') || el.text();
       const price = parsePrice(raw);
       if (price !== null) {
-        return { price, platform, selectorUsed: selector };
+        const currency = pageCurrency || detectCurrencyFromText(raw);
+        return { price, platform, selectorUsed: selector, currency };
       }
     }
   }
-  return { price: null, platform, selectorUsed: null };
+  return { price: null, platform, selectorUsed: null, currency: null };
 }
 
 async function fetchStaticHtml(url) {
@@ -92,7 +96,7 @@ async function scrapeProduct(product) {
   return {
     success: true,
     price: result.price,
-    currency: product.currency_default || 'USD',
+    currency: result.currency || product.currency_default || 'USD',
     platform: result.platform,
     selectorUsed: result.selectorUsed,
     inStock: true,

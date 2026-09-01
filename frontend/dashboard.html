@@ -89,6 +89,16 @@
         <label for="product-threshold">Only alert if price changes by at least (%)</label>
         <input type="number" id="product-threshold" min="0" step="0.5" placeholder="0" />
       </div>
+      <div class="field">
+        <label for="product-currency">Currency</label>
+        <select id="product-currency">
+          <option value="">Auto-detect from page</option>
+          <option value="USD">USD ($)</option>
+          <option value="EUR">EUR (€)</option>
+          <option value="GBP">GBP (£)</option>
+          <option value="MAD">MAD (DH)</option>
+        </select>
+      </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-outline" id="close-add-modal">Cancel</button>
         <button type="submit" class="btn btn-primary">Start tracking</button>

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS tracked_products (
   alert_threshold_pct NUMERIC DEFAULT 0,
   is_active BOOLEAN NOT NULL DEFAULT true,
   last_price NUMERIC,
+  last_currency TEXT,
   last_in_stock BOOLEAN,
   last_checked_at TIMESTAMPTZ,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -55,6 +56,10 @@ CREATE TABLE IF NOT EXISTS scrape_jobs (
   error_message TEXT,
   attempted_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+-- Safe to re-run: adds columns introduced after the initial release for tables
+-- that already exist in a deployed database.
+ALTER TABLE tracked_products ADD COLUMN IF NOT EXISTS last_currency TEXT;
 
 CREATE INDEX IF NOT EXISTS idx_products_user ON tracked_products(user_id);
 CREATE INDEX IF NOT EXISTS idx_history_product ON price_history(product_id, scraped_at DESC);

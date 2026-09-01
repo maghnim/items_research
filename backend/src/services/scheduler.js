@@ -24,9 +24,9 @@ async function checkOneProduct(product) {
 
   await db.query(
     `UPDATE tracked_products
-     SET last_price = $1, last_in_stock = $2, last_checked_at = now()
-     WHERE id = $3`,
-    [result.price, result.inStock, product.id]
+     SET last_price = $1, last_currency = $2, last_in_stock = $3, last_checked_at = now()
+     WHERE id = $4`,
+    [result.price, result.currency, result.inStock, product.id]
   );
 
   await db.query(
