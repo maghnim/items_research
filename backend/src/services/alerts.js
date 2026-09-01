@@ -44,11 +44,17 @@ async function evaluateAndAlert(product, scrapeResult) {
     const userResult = await db.query('SELECT email FROM users WHERE id = $1', [product.user_id]);
     const email = userResult.rows[0]?.email;
     if (email) {
-      await sendAlertEmail({
-        to: email,
-        subject: alertSubject(event, product),
-        html: alertHtml(event, product),
-      });
+      try {
+        await sendAlertEmail({
+          to: email,
+          subject: alertSubject(event, product),
+          html: alertHtml(event, product),
+        });
+      } catch (err) {
+        // A failed send (bad key, sandbox recipient restriction, provider outage) shouldn't
+        // fail the price check itself — the alert is already recorded in alerts_log either way.
+        console.error(`[alerts] email send failed for product ${product.id}:`, err.message);
+      }
     }
   }
 
