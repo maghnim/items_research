@@ -58,6 +58,7 @@ function rowHtml(p) {
       <td>${status}</td>
       <td style="font-size:13px;color:#64748b;">${checked}</td>
       <td>
+        <button class="btn btn-outline btn-sm" onclick="checkNow('${p.id}', this)">Check now</button>
         <button class="btn btn-outline btn-sm" onclick="toggleActive('${p.id}', ${!p.is_active})">${p.is_active ? 'Pause' : 'Resume'}</button>
         <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>
       </td>
@@ -73,6 +74,20 @@ function escapeHtml(str) {
   const div = document.createElement('div');
   div.textContent = str;
   return div.innerHTML;
+}
+
+async function checkNow(id, btn) {
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = 'Checking...';
+  try {
+    await api(`/products/${id}/check`, { method: 'POST' });
+    loadProducts();
+  } catch (err) {
+    alert(err.message);
+    btn.disabled = false;
+    btn.textContent = original;
+  }
 }
 
 async function toggleActive(id, newState) {

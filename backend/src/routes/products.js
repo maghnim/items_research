@@ -64,6 +64,19 @@ router.get('/:id/history', async (req, res) => {
   res.json({ history: history.rows });
 });
 
+router.post('/:id/check', async (req, res) => {
+  const owned = await db.query('SELECT * FROM tracked_products WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
+  const product = owned.rows[0];
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found.' });
+  }
+
+  await checkOneProduct(product);
+
+  const refreshed = await db.query('SELECT * FROM tracked_products WHERE id = $1', [req.params.id]);
+  res.json({ product: refreshed.rows[0] });
+});
+
 router.patch('/:id', async (req, res) => {
   const { nickname, is_active, alert_threshold_pct, price_selector } = req.body;
   const result = await db.query(
