@@ -1,0 +1,249 @@
+<title>Atlas Trail Runner</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root {
+    --paper: #f1efe7;
+    --ink: #1c2b26;
+    --mist: #6b7268;
+    --line: #d9d4c7;
+    --moss: #2f5233;
+    --moss-ink: #21391f;
+    --amber: #c97c1f;
+    --card: #ffffff;
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+    --font-body: 'Work Sans', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SFMono-Regular', Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141f1a;
+      --ink: #ece7d9;
+      --mist: #93998d;
+      --line: #2b362f;
+      --moss: #6fa97a;
+      --moss-ink: #d7ecd9;
+      --amber: #e0a050;
+      --card: #1b2721;
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #141f1a;
+    --ink: #ece7d9;
+    --mist: #93998d;
+    --line: #2b362f;
+    --moss: #6fa97a;
+    --moss-ink: #d7ecd9;
+    --amber: #e0a050;
+    --card: #1b2721;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.5;
+  }
+
+  .topline {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 18px 32px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--mist);
+  }
+  .topline .mark { color: var(--ink); font-weight: 600; letter-spacing: 0.06em; }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 56px;
+    align-items: start;
+  }
+
+  .art {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    aspect-ratio: 4 / 5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .art svg { width: 72%; height: auto; }
+
+  .kicker {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--moss);
+    margin: 0 0 14px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 40px;
+    font-weight: 500;
+    line-height: 1.1;
+    margin: 0 0 12px;
+    text-wrap: balance;
+    letter-spacing: -0.01em;
+  }
+
+  .dek {
+    color: var(--mist);
+    font-size: 16px;
+    max-width: 46ch;
+    margin: 0 0 28px;
+  }
+
+  .price-block {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 20px 0;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 28px;
+  }
+  .price-figure {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .price-was {
+    font-family: var(--font-mono);
+    font-size: 16px;
+    color: var(--mist);
+    text-decoration: line-through;
+  }
+  .badge {
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: var(--amber);
+    color: var(--paper);
+    padding: 4px 10px;
+    border-radius: 3px;
+  }
+  .stock {
+    font-size: 13.5px;
+    color: var(--moss);
+    font-weight: 500;
+    margin-top: -14px;
+    margin-bottom: 28px;
+  }
+  .stock::before { content: "● "; }
+
+  .specs {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    column-gap: 24px;
+    row-gap: 10px;
+    font-size: 14.5px;
+    margin-bottom: 32px;
+  }
+  .specs dt {
+    font-family: var(--font-mono);
+    color: var(--mist);
+    font-size: 12.5px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    padding-top: 2px;
+  }
+  .specs dd { margin: 0; }
+
+  .cta {
+    display: inline-block;
+    background: var(--moss);
+    color: var(--paper);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14.5px;
+    padding: 13px 26px;
+    border-radius: 3px;
+    letter-spacing: 0.01em;
+  }
+
+  .fixture-note {
+    margin-top: 48px;
+    padding: 16px 18px;
+    border: 1px dashed var(--line);
+    border-radius: 4px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    color: var(--mist);
+  }
+  .fixture-note strong { color: var(--ink); }
+
+  @media (max-width: 720px) {
+    .wrap { grid-template-columns: 1fr; padding: 40px 20px 60px; gap: 32px; }
+    h1 { font-size: 30px; }
+  }
+</style>
+
+<div class="topline">
+  <span class="mark">Atlas Outfitters</span>
+  <span>Footwear / Trail</span>
+</div>
+
+<div class="wrap">
+  <div class="art" aria-hidden="true">
+    <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M40 150 C40 120 55 95 55 75 C55 60 65 50 80 50 L120 50 C130 50 135 58 135 68 L135 110 C150 110 165 118 165 138 C165 148 158 155 148 155 L48 155 C43 155 40 153 40 150 Z"
+        stroke="#2f5233" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M55 75 L135 75" stroke="#2f5233" stroke-width="2.5"/>
+      <path d="M70 50 L70 40 M90 50 L90 38 M110 50 L110 40" stroke="#2f5233" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M48 155 L44 168 L152 168 L148 155" stroke="#2f5233" stroke-width="3" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <div itemscope itemtype="https://schema.org/Product">
+    <p class="kicker">Waterproof / Trail Runner</p>
+    <h1 itemprop="name">Atlas Trail Runner Mid</h1>
+    <p class="dek" itemprop="description">A breathable ripstop upper over a lugged rubber outsole, built for scrambling scree and fire roads alike. Seam-sealed to the ankle.</p>
+
+    <div class="price-block" itemprop="offers" itemscope itemtype="https://schema.org/Offer">
+      <meta itemprop="priceCurrency" content="MAD" data-currency="MAD" />
+      <span class="price-figure" itemprop="price" content="1299.00">1,299.00&nbsp;DH</span>
+      <span class="price-was">1,549.00&nbsp;DH</span>
+      <span class="badge">Save 16%</span>
+      <link itemprop="availability" href="https://schema.org/InStock" />
+    </div>
+    <p class="stock">In stock — ships in 2–3 days</p>
+
+    <dl class="specs">
+      <dt>Upper</dt><dd>Ripstop nylon, PFC-free DWR coating</dd>
+      <dt>Outsole</dt><dd>5mm lugged rubber, Atlas GripTrack compound</dd>
+      <dt>Weight</dt><dd>412g (US M9, per shoe)</dd>
+      <dt>Sizes</dt><dd>EU 38–46, half sizes 40–44</dd>
+      <dt>SKU</dt><dd>ATL-TRM-2026-MAD</dd>
+    </dl>
+
+    <span class="cta">Add to Cart</span>
+
+    <div class="fixture-note">
+      <strong>Test fixture.</strong> This is a synthetic product page used to verify PricePilot's price + currency detection end to end. Price is encoded via schema.org <code>Offer</code> microdata (MAD). Not a real store or brand.
+    </div>
+  </div>
+</div>
