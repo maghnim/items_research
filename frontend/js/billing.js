@@ -11,6 +11,15 @@ async function startStripeCheckout(category, months) {
   }
 }
 
+async function startTrialCheckout() {
+  try {
+    const { url } = await api('/billing/stripe/create-trial-checkout-session', { method: 'POST' });
+    window.location.href = url;
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 async function openBillingPortal() {
   try {
     const { url } = await api('/billing/stripe/portal');

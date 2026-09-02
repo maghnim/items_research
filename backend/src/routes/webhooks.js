@@ -1,7 +1,7 @@
 const express = require('express');
 const Stripe = require('stripe');
 const db = require('../db');
-const { CATEGORIES, DURATIONS, envKey } = require('../utils/pricing');
+const { CATEGORIES, DURATIONS, envKey, TRIAL_DURATION_DAYS } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -31,11 +31,19 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object;
-        const subscriptionId = session.subscription;
         const userId = session.metadata?.userId;
-        const category = session.metadata?.category;
-        const months = session.metadata?.months;
-        if (userId && category) {
+        const type = session.metadata?.type;
+
+        if (userId && type === 'trial') {
+          const trialExpiresAt = new Date(Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+          await db.query(
+            `UPDATE users SET plan_status = 'active', trial_expires_at = $1 WHERE id = $2`,
+            [trialExpiresAt, userId]
+          );
+        } else if (userId && session.metadata?.category) {
+          const subscriptionId = session.subscription;
+          const category = session.metadata.category;
+          const months = session.metadata.months;
           await db.query(
             `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active' WHERE id = $4`,
             [subscriptionId, category, months, userId]

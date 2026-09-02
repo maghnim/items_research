@@ -31,8 +31,17 @@ router.post('/', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Product URL is required.' });
   }
 
-  const userResult = await db.query('SELECT plan_tier FROM users WHERE id = $1', [req.userId]);
-  const plan = getPlan(userResult.rows[0]?.plan_tier);
+  const userResult = await db.query('SELECT plan_tier, plan_status, trial_expires_at FROM users WHERE id = $1', [req.userId]);
+  const account = userResult.rows[0];
+
+  if (account?.plan_status !== 'active') {
+    return res.status(402).json({ error: 'Payment required. Complete your trial payment or choose a plan to start tracking products.' });
+  }
+  if (account.plan_tier === 'trial' && account.trial_expires_at && new Date(account.trial_expires_at) < new Date()) {
+    return res.status(402).json({ error: 'Your trial has expired. Choose a plan to keep tracking products.' });
+  }
+
+  const plan = getPlan(account?.plan_tier);
 
   const countResult = await db.query(
     'SELECT COUNT(*) FROM tracked_products WHERE user_id = $1 AND is_active = true',

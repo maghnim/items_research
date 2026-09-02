@@ -26,7 +26,7 @@ router.post('/signup', asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const result = await db.query(
-    `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, plan_tier`,
+    `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, plan_tier, plan_status`,
     [email.toLowerCase(), passwordHash]
   );
 
@@ -55,13 +55,13 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = signToken(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email, plan_tier: user.plan_tier },
+    user: { id: user.id, email: user.email, plan_tier: user.plan_tier, plan_status: user.plan_status, trial_expires_at: user.trial_expires_at },
   });
 }));
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const result = await db.query(
-    'SELECT id, email, plan_tier, plan_status, created_at FROM users WHERE id = $1',
+    'SELECT id, email, plan_tier, plan_status, trial_expires_at, created_at FROM users WHERE id = $1',
     [req.userId]
   );
   if (result.rows.length === 0) {

@@ -5,6 +5,11 @@
 const CATEGORIES = ['standard', 'premium', 'premiumplus', 'vip'];
 const DURATIONS = [1, 3, 6, 12];
 
+// The trial itself is a paid, one-time unlock (not a subscription): pay once, get 14
+// days of trial-tier access. STRIPE_PRICE_TRIAL is a one-time (non-recurring) Price.
+const TRIAL_PRICE_EUR = 2.99;
+const TRIAL_DURATION_DAYS = 14;
+
 const PRICES_EUR = {
   standard: { 1: 9.99, 3: 19.99, 6: 29.99, 12: 45.99 },
   premium: { 1: 10.99, 3: 25.99, 6: 39.99, 12: 49.99 },
@@ -39,4 +44,15 @@ function envKey(prefix, category, months) {
   return `${prefix}_${category.toUpperCase()}_${months}`;
 }
 
-module.exports = { CATEGORIES, DURATIONS, PRICES_EUR, CATEGORY_LIMITS, isValidCombo, priceFor, getCategoryLimits, envKey };
+module.exports = {
+  CATEGORIES,
+  DURATIONS,
+  PRICES_EUR,
+  CATEGORY_LIMITS,
+  TRIAL_PRICE_EUR,
+  TRIAL_DURATION_DAYS,
+  isValidCombo,
+  priceFor,
+  getCategoryLimits,
+  envKey,
+};

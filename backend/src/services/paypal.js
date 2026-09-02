@@ -22,4 +22,29 @@ async function getSubscription(subscriptionId) {
   return response.data;
 }
 
-module.exports = { getAccessToken, getSubscription, BASE_URL };
+// One-time payment (PayPal Orders API v2) — used for the EUR 2.99 trial unlock, which
+// isn't a recurring subscription.
+async function createOrder(amount, currency) {
+  const token = await getAccessToken();
+  const response = await axios.post(
+    `${BASE_URL}/v2/checkout/orders`,
+    {
+      intent: 'CAPTURE',
+      purchase_units: [{ amount: { currency_code: currency, value: amount.toFixed(2) } }],
+    },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+  return response.data;
+}
+
+async function captureOrder(orderId) {
+  const token = await getAccessToken();
+  const response = await axios.post(
+    `${BASE_URL}/v2/checkout/orders/${orderId}/capture`,
+    {},
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+  return response.data;
+}
+
+module.exports = { getAccessToken, getSubscription, createOrder, captureOrder, BASE_URL };

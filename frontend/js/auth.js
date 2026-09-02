@@ -19,7 +19,9 @@ if (signupForm) {
       const data = await api('/auth/signup', { method: 'POST', body: { email, password } });
       setToken(data.token);
       setUser(data.user);
-      window.location.href = 'dashboard.html';
+      // Account created but trial access isn't unlocked yet — send straight to the
+      // EUR 2.99 trial checkout rather than an empty, gated dashboard.
+      await startTrialCheckout();
     } catch (err) {
       showFormMessage(msg, err.message, 'error');
       submitBtn.disabled = false;

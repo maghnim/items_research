@@ -6,6 +6,41 @@ if (user) {
   if (el) el.textContent = user.email;
 }
 
+async function checkPaymentStatus() {
+  try {
+    const { user: fresh } = await api('/auth/me');
+    setUser(fresh);
+
+    const banner = document.getElementById('paywall-banner');
+    const titleEl = document.getElementById('paywall-title');
+    const bodyEl = document.getElementById('paywall-body');
+    const ctaEl = document.getElementById('paywall-cta');
+    const addBtn = document.getElementById('open-add-modal');
+
+    const trialExpired = fresh.plan_tier === 'trial' && fresh.trial_expires_at && new Date(fresh.trial_expires_at) < new Date();
+
+    if (fresh.plan_status !== 'active') {
+      titleEl.textContent = t('dashboard.paywall.pending.title');
+      bodyEl.textContent = t('dashboard.paywall.pending.body');
+      ctaEl.textContent = t('dashboard.paywall.pending.cta');
+      ctaEl.onclick = startTrialCheckout;
+      banner.style.display = 'flex';
+      if (addBtn) addBtn.disabled = true;
+    } else if (trialExpired) {
+      titleEl.textContent = t('dashboard.paywall.expired.title');
+      bodyEl.textContent = t('dashboard.paywall.expired.body');
+      ctaEl.textContent = t('dashboard.paywall.expired.cta');
+      ctaEl.onclick = () => { window.location.href = 'pricing.html'; };
+      banner.style.display = 'flex';
+      if (addBtn) addBtn.disabled = true;
+    }
+  } catch (err) {
+    console.error('Failed to check payment status:', err.message);
+  }
+}
+
+checkPaymentStatus();
+
 async function loadProducts() {
   const listEl = document.getElementById('products-tbody');
   const emptyEl = document.getElementById('products-empty');
@@ -31,7 +66,7 @@ function renderStats(products) {
   document.getElementById('stat-active').textContent = products.filter((p) => p.is_active).length;
   const withPrice = products.filter((p) => p.last_price !== null);
   document.getElementById('stat-tracked').textContent = withPrice.length;
-  document.getElementById('stat-plan').textContent = (user?.plan_tier || 'trial').toUpperCase();
+  document.getElementById('stat-plan').textContent = (getUser()?.plan_tier || 'trial').toUpperCase();
 }
 
 const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', MAD: 'DH', JPY: '¥', CHF: 'CHF', CAD: 'CA$', AUD: 'A$' };
