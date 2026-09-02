@@ -1,4 +1,4 @@
-<title>Pricing — PricePilot</title>
+<title data-i18n="meta.pricing.title">Pricing — PricePilot</title>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="css/style.css" />
@@ -7,14 +7,18 @@
   <div class="container">
     <a href="index.html" class="logo"><span class="logo-mark">P</span> PricePilot</a>
     <nav class="main-nav">
-      <a href="index.html#features">Features</a>
-      <a href="index.html#how-it-works">How it works</a>
-      <a href="pricing.html">Pricing</a>
-      <a href="about.html">About</a>
+      <a href="index.html#features" data-i18n="nav.features">Features</a>
+      <a href="index.html#how-it-works" data-i18n="nav.how">How it works</a>
+      <a href="pricing.html" data-i18n="nav.pricing">Pricing</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
     </nav>
     <div class="header-actions">
-      <a href="login.html" class="btn btn-outline">Log in</a>
-      <a href="signup.html" class="btn btn-primary">Start free trial</a>
+      <div class="lang-switch">
+        <button data-lang-switch="en">EN</button>
+        <button data-lang-switch="fr">FR</button>
+      </div>
+      <a href="login.html" class="btn btn-outline" data-i18n="nav.login">Log in</a>
+      <a href="signup.html" class="btn btn-primary" data-i18n="nav.signup">Start free trial</a>
     </div>
   </div>
 </header>
@@ -22,67 +26,67 @@
 <section style="padding-bottom:40px;">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow">Pricing</span>
-      <h2>Plans that scale with how many competitors you track</h2>
-      <p>Every plan includes a 14-day free trial. No credit card required to start.</p>
+      <span class="eyebrow" data-i18n="pricing.eyebrow">Pricing</span>
+      <h2 data-i18n="pricing.h2">Plans that scale with how many competitors you track</h2>
+      <p data-i18n="pricing.p">Every plan includes a 14-day free trial. No credit card required to start.</p>
     </div>
 
     <div class="pricing-grid">
       <div class="plan-card">
-        <h3>Starter</h3>
-        <p class="plan-desc">For a single store keeping an eye on a few rivals.</p>
-        <div class="plan-price">$15<span>/mo</span></div>
+        <h3 data-i18n="pricing.plan.starter.name">Starter</h3>
+        <p class="plan-desc" data-i18n="pricing.plan.starter.desc">For a single store keeping an eye on a few rivals.</p>
+        <div class="plan-price">$15<span data-i18n="common.perMonth">/mo</span></div>
         <ul class="plan-features">
-          <li>10 tracked products</li>
-          <li>Checked every 6 hours</li>
-          <li>Email alerts</li>
-          <li>90-day price history</li>
+          <li data-i18n="pricing.plan.starter.f1">10 tracked products</li>
+          <li data-i18n="pricing.plan.starter.f2">Checked every 6 hours</li>
+          <li data-i18n="pricing.plan.starter.f3">Email alerts</li>
+          <li data-i18n="pricing.plan.starter.f4">90-day price history</li>
         </ul>
-        <button class="btn btn-outline btn-block" onclick="startStripeCheckout('starter')">Choose Starter</button>
+        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.starter.cta" onclick="startStripeCheckout('starter')">Choose Starter</button>
       </div>
 
       <div class="plan-card featured">
-        <span class="plan-badge">Most popular</span>
-        <h3>Growth</h3>
-        <p class="plan-desc">For growing stores tracking a full competitive set.</p>
-        <div class="plan-price">$39<span>/mo</span></div>
+        <span class="plan-badge" data-i18n="pricing.badge.popular">Most popular</span>
+        <h3 data-i18n="pricing.plan.growth.name">Growth</h3>
+        <p class="plan-desc" data-i18n="pricing.plan.growth.desc">For growing stores tracking a full competitive set.</p>
+        <div class="plan-price">$39<span data-i18n="common.perMonth">/mo</span></div>
         <ul class="plan-features">
-          <li>50 tracked products</li>
-          <li>Checked every hour</li>
-          <li>Email alerts + thresholds</li>
-          <li>Unlimited price history</li>
+          <li data-i18n="pricing.plan.growth.f1">50 tracked products</li>
+          <li data-i18n="pricing.plan.growth.f2">Checked every hour</li>
+          <li data-i18n="pricing.plan.growth.f3">Email alerts + thresholds</li>
+          <li data-i18n="pricing.plan.growth.f4">Unlimited price history</li>
         </ul>
-        <button class="btn btn-primary btn-block" onclick="startStripeCheckout('growth')">Choose Growth</button>
+        <button class="btn btn-primary btn-block" data-i18n="pricing.plan.growth.cta" onclick="startStripeCheckout('growth')">Choose Growth</button>
       </div>
 
       <div class="plan-card">
-        <h3>Pro</h3>
-        <p class="plan-desc">For teams that need near real-time visibility.</p>
-        <div class="plan-price">$89<span>/mo</span></div>
+        <h3 data-i18n="pricing.plan.pro.name">Pro</h3>
+        <p class="plan-desc" data-i18n="pricing.plan.pro.desc">For teams that need near real-time visibility.</p>
+        <div class="plan-price">$89<span data-i18n="common.perMonth">/mo</span></div>
         <ul class="plan-features">
-          <li>200 tracked products</li>
-          <li>Checked every 15 minutes</li>
-          <li>Priority alert delivery</li>
-          <li>Unlimited price history</li>
+          <li data-i18n="pricing.plan.pro.f1">200 tracked products</li>
+          <li data-i18n="pricing.plan.pro.f2">Checked every 15 minutes</li>
+          <li data-i18n="pricing.plan.pro.f3">Priority alert delivery</li>
+          <li data-i18n="pricing.plan.pro.f4">Unlimited price history</li>
         </ul>
-        <button class="btn btn-outline btn-block" onclick="startStripeCheckout('pro')">Choose Pro</button>
+        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.pro.cta" onclick="startStripeCheckout('pro')">Choose Pro</button>
       </div>
 
       <div class="plan-card">
-        <h3>Agency</h3>
-        <p class="plan-desc">For agencies managing pricing across many client stores.</p>
-        <div class="plan-price">$199<span>/mo</span></div>
+        <h3 data-i18n="pricing.plan.agency.name">Agency</h3>
+        <p class="plan-desc" data-i18n="pricing.plan.agency.desc">For agencies managing pricing across many client stores.</p>
+        <div class="plan-price">$199<span data-i18n="common.perMonth">/mo</span></div>
         <ul class="plan-features">
-          <li>Unlimited tracked products</li>
-          <li>Checked every 15 minutes</li>
-          <li>API access</li>
-          <li>Priority support</li>
+          <li data-i18n="pricing.plan.agency.f1">Unlimited tracked products</li>
+          <li data-i18n="pricing.plan.agency.f2">Checked every 15 minutes</li>
+          <li data-i18n="pricing.plan.agency.f3">API access</li>
+          <li data-i18n="pricing.plan.agency.f4">Priority support</li>
         </ul>
-        <button class="btn btn-outline btn-block" onclick="startStripeCheckout('agency')">Choose Agency</button>
+        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.agency.cta" onclick="startStripeCheckout('agency')">Choose Agency</button>
       </div>
     </div>
 
-    <p style="text-align:center; margin-top:32px; color:#64748b; font-size:14px;">
+    <p style="text-align:center; margin-top:32px; color:#64748b; font-size:14px;" data-i18n="pricing.paypal.note">
       Prefer PayPal? You can switch your payment method to PayPal after starting your trial from the billing page in your dashboard.
     </p>
   </div>
@@ -91,21 +95,21 @@
 <section class="section-alt">
   <div class="container">
     <div class="section-head">
-      <span class="eyebrow">Questions</span>
-      <h2>Pricing FAQ</h2>
+      <span class="eyebrow" data-i18n="pricing.faq.eyebrow">Questions</span>
+      <h2 data-i18n="pricing.faq.h2">Pricing FAQ</h2>
     </div>
     <div class="grid-3">
       <div class="card feature-card">
-        <h3>Can I cancel anytime?</h3>
-        <p>Yes. Manage or cancel your subscription anytime from the billing portal in your dashboard — no support ticket required. See our <a href="refund-policy.html">refund policy</a>.</p>
+        <h3 data-i18n="pricing.faq.q1">Can I cancel anytime?</h3>
+        <p data-i18n="pricing.faq.a1.html" data-i18n-html>Yes. Manage or cancel your subscription anytime from the billing portal in your dashboard — no support ticket required. See our <a href="refund-policy.html">refund policy</a>.</p>
       </div>
       <div class="card feature-card">
-        <h3>What happens if I exceed my product limit?</h3>
-        <p>You'll be prompted to upgrade before adding more products — nothing you're already tracking gets paused.</p>
+        <h3 data-i18n="pricing.faq.q2">What happens if I exceed my product limit?</h3>
+        <p data-i18n="pricing.faq.a2">You'll be prompted to upgrade before adding more products — nothing you're already tracking gets paused.</p>
       </div>
       <div class="card feature-card">
-        <h3>Do you support annual billing?</h3>
-        <p>Monthly billing is available today. Contact us if you'd like an annual plan invoiced directly.</p>
+        <h3 data-i18n="pricing.faq.q3">Do you support annual billing?</h3>
+        <p data-i18n="pricing.faq.a3">Monthly billing is available today. Contact us if you'd like an annual plan invoiced directly.</p>
       </div>
     </div>
   </div>
@@ -116,41 +120,43 @@
     <div class="footer-grid">
       <div class="footer-brand">
         <a href="index.html" class="logo" style="color:white;"><span class="logo-mark">P</span> PricePilot</a>
-        <p>Automated competitor price tracking for ecommerce sellers.</p>
+        <p data-i18n="footer.tagline.short">Automated competitor price tracking for ecommerce sellers.</p>
       </div>
       <div>
-        <h4>Product</h4>
+        <h4 data-i18n="footer.col.product">Product</h4>
         <ul>
-          <li><a href="index.html#features">Features</a></li>
-          <li><a href="pricing.html">Pricing</a></li>
+          <li><a href="index.html#features" data-i18n="footer.link.features">Features</a></li>
+          <li><a href="pricing.html" data-i18n="footer.link.pricing">Pricing</a></li>
         </ul>
       </div>
       <div>
-        <h4>Company</h4>
+        <h4 data-i18n="footer.col.company">Company</h4>
         <ul>
-          <li><a href="about.html">About</a></li>
-          <li><a href="contact.html">Contact</a></li>
+          <li><a href="about.html" data-i18n="footer.link.about">About</a></li>
+          <li><a href="contact.html" data-i18n="footer.link.contact">Contact</a></li>
         </ul>
       </div>
       <div>
-        <h4>Legal</h4>
+        <h4 data-i18n="footer.col.legal">Legal</h4>
         <ul>
-          <li><a href="privacy-policy.html">Privacy Policy</a></li>
-          <li><a href="terms-of-service.html">Terms of Service</a></li>
-          <li><a href="refund-policy.html">Refund Policy</a></li>
+          <li><a href="privacy-policy.html" data-i18n="footer.link.privacy">Privacy Policy</a></li>
+          <li><a href="terms-of-service.html" data-i18n="footer.link.terms">Terms of Service</a></li>
+          <li><a href="refund-policy.html" data-i18n="footer.link.refund">Refund Policy</a></li>
         </ul>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>&copy; 2026 PricePilot. All rights reserved.</p>
+      <p data-i18n="footer.copyright">© 2026 PricePilot. All rights reserved.</p>
       <div class="footer-links">
-        <a href="privacy-policy.html">Privacy</a>
-        <a href="terms-of-service.html">Terms</a>
-        <a href="refund-policy.html">Refunds</a>
+        <a href="privacy-policy.html" data-i18n="footer.bottom.privacy">Privacy</a>
+        <a href="terms-of-service.html" data-i18n="footer.bottom.terms">Terms</a>
+        <a href="refund-policy.html" data-i18n="footer.bottom.refunds">Refunds</a>
       </div>
     </div>
   </div>
 </footer>
 
+<script src="js/translations.js"></script>
+<script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/billing.js"></script>

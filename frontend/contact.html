@@ -1,4 +1,4 @@
-<title>Contact — PricePilot</title>
+<title data-i18n="meta.contact.title">Contact — PricePilot</title>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="css/style.css" />
@@ -7,13 +7,17 @@
   <div class="container">
     <a href="index.html" class="logo"><span class="logo-mark">P</span> PricePilot</a>
     <nav class="main-nav">
-      <a href="index.html#features">Features</a>
-      <a href="pricing.html">Pricing</a>
-      <a href="about.html">About</a>
+      <a href="index.html#features" data-i18n="nav.features">Features</a>
+      <a href="pricing.html" data-i18n="nav.pricing">Pricing</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
     </nav>
     <div class="header-actions">
-      <a href="login.html" class="btn btn-outline">Log in</a>
-      <a href="signup.html" class="btn btn-primary">Start free trial</a>
+      <div class="lang-switch">
+        <button data-lang-switch="en">EN</button>
+        <button data-lang-switch="fr">FR</button>
+      </div>
+      <a href="login.html" class="btn btn-outline" data-i18n="nav.login">Log in</a>
+      <a href="signup.html" class="btn btn-primary" data-i18n="nav.signup">Start free trial</a>
     </div>
   </div>
 </header>
@@ -21,30 +25,30 @@
 <section>
   <div class="container" style="max-width:640px;">
     <div class="section-head" style="margin-bottom:36px;">
-      <span class="eyebrow">Contact</span>
-      <h2>We're happy to help</h2>
-      <p>Reach out for support, billing questions, or general inquiries.</p>
+      <span class="eyebrow" data-i18n="contact.eyebrow">Contact</span>
+      <h2 data-i18n="contact.h2">We're happy to help</h2>
+      <p data-i18n="contact.p">Reach out for support, billing questions, or general inquiries.</p>
     </div>
 
     <div class="grid-3" style="grid-template-columns:1fr 1fr 1fr;">
       <div class="card feature-card">
         <div class="icon">💬</div>
-        <h3>Support</h3>
+        <h3 data-i18n="contact.card1.title">Support</h3>
         <p><a href="mailto:support@pricepilot.app">support@pricepilot.app</a></p>
       </div>
       <div class="card feature-card">
         <div class="icon">💳</div>
-        <h3>Billing</h3>
+        <h3 data-i18n="contact.card2.title">Billing</h3>
         <p><a href="mailto:billing@pricepilot.app">billing@pricepilot.app</a></p>
       </div>
       <div class="card feature-card">
         <div class="icon">🔒</div>
-        <h3>Privacy</h3>
+        <h3 data-i18n="contact.card3.title">Privacy</h3>
         <p><a href="mailto:privacy@pricepilot.app">privacy@pricepilot.app</a></p>
       </div>
     </div>
 
-    <p style="text-align:center;color:#64748b;font-size:14px;margin-top:36px;">
+    <p style="text-align:center;color:#64748b;font-size:14px;margin-top:36px;" data-i18n="contact.response">
       We typically respond within 1 business day.
     </p>
   </div>
@@ -53,12 +57,15 @@
 <footer class="site-footer">
   <div class="container">
     <div class="footer-bottom">
-      <p>&copy; 2026 PricePilot. All rights reserved.</p>
+      <p data-i18n="footer.copyright">© 2026 PricePilot. All rights reserved.</p>
       <div class="footer-links">
-        <a href="privacy-policy.html">Privacy</a>
-        <a href="terms-of-service.html">Terms</a>
-        <a href="refund-policy.html">Refunds</a>
+        <a href="privacy-policy.html" data-i18n="footer.bottom.privacy">Privacy</a>
+        <a href="terms-of-service.html" data-i18n="footer.bottom.terms">Terms</a>
+        <a href="refund-policy.html" data-i18n="footer.bottom.refunds">Refunds</a>
       </div>
     </div>
   </div>
 </footer>
+
+<script src="js/translations.js"></script>
+<script src="js/i18n.js"></script>

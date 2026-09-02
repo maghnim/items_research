@@ -13,7 +13,7 @@ if (signupForm) {
     const submitBtn = signupForm.querySelector('button[type="submit"]');
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Creating account...';
+    submitBtn.textContent = t('signup.submit.loading');
 
     try {
       const data = await api('/auth/signup', { method: 'POST', body: { email, password } });
@@ -23,7 +23,7 @@ if (signupForm) {
     } catch (err) {
       showFormMessage(msg, err.message, 'error');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Create account';
+      submitBtn.textContent = t('signup.submit');
     }
   });
 }
@@ -38,7 +38,7 @@ if (loginForm) {
     const submitBtn = loginForm.querySelector('button[type="submit"]');
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Signing in...';
+    submitBtn.textContent = t('login.submit.loading');
 
     try {
       const data = await api('/auth/login', { method: 'POST', body: { email, password } });
@@ -48,7 +48,7 @@ if (loginForm) {
     } catch (err) {
       showFormMessage(msg, err.message, 'error');
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Sign in';
+      submitBtn.textContent = t('login.submit');
     }
   });
 }

@@ -22,7 +22,7 @@ async function loadProducts() {
 
     listEl.innerHTML = products.map(rowHtml).join('');
   } catch (err) {
-    listEl.innerHTML = `<tr><td colspan="6">Failed to load products: ${err.message}</td></tr>`;
+    listEl.innerHTML = `<tr><td colspan="6">${t('dashboard.load.error')}: ${err.message}</td></tr>`;
   }
 }
 
@@ -47,9 +47,9 @@ function rowHtml(p) {
   const name = p.nickname || p.competitor_name || new URL(p.url).hostname;
   const price = p.last_price !== null ? formatPrice(p.last_price, p.last_currency) : '—';
   const status = p.is_active
-    ? '<span class="badge badge-active">Active</span>'
-    : '<span class="badge badge-inactive">Paused</span>';
-  const checked = p.last_checked_at ? new Date(p.last_checked_at).toLocaleString() : 'Not checked yet';
+    ? `<span class="badge badge-active">${t('dyn.active')}</span>`
+    : `<span class="badge badge-inactive">${t('dyn.paused')}</span>`;
+  const checked = p.last_checked_at ? new Date(p.last_checked_at).toLocaleString() : t('dyn.notchecked');
 
   return `
     <tr>
@@ -58,9 +58,9 @@ function rowHtml(p) {
       <td>${status}</td>
       <td style="font-size:13px;color:#64748b;">${checked}</td>
       <td>
-        <button class="btn btn-outline btn-sm" onclick="checkNow('${p.id}', this)">Check now</button>
-        <button class="btn btn-outline btn-sm" onclick="toggleActive('${p.id}', ${!p.is_active})">${p.is_active ? 'Pause' : 'Resume'}</button>
-        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">Delete</button>
+        <button class="btn btn-outline btn-sm" onclick="checkNow('${p.id}', this)">${t('dyn.checknow')}</button>
+        <button class="btn btn-outline btn-sm" onclick="toggleActive('${p.id}', ${!p.is_active})">${p.is_active ? t('dyn.pause') : t('dyn.resume')}</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}')">${t('dyn.delete')}</button>
       </td>
     </tr>
   `;
@@ -79,7 +79,7 @@ function escapeHtml(str) {
 async function checkNow(id, btn) {
   const original = btn.textContent;
   btn.disabled = true;
-  btn.textContent = 'Checking...';
+  btn.textContent = t('dyn.checking');
   try {
     await api(`/products/${id}/check`, { method: 'POST' });
     loadProducts();
@@ -100,7 +100,7 @@ async function toggleActive(id, newState) {
 }
 
 async function deleteProduct(id) {
-  if (!confirm('Stop tracking this product? This removes its price history too.')) return;
+  if (!confirm(t('dashboard.confirm.delete'))) return;
   try {
     await api(`/products/${id}`, { method: 'DELETE' });
     loadProducts();
@@ -126,7 +126,7 @@ if (addForm) {
     const submitBtn = addForm.querySelector('button[type="submit"]');
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Adding...';
+    submitBtn.textContent = t('dyn.adding');
 
     try {
       await api('/products', {
@@ -142,7 +142,7 @@ if (addForm) {
       msg.className = 'form-msg error';
     } finally {
       submitBtn.disabled = false;
-      submitBtn.textContent = 'Start tracking';
+      submitBtn.textContent = t('dyn.starttracking');
     }
   });
 }
