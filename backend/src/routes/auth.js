@@ -3,6 +3,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
 
 const router = express.Router();
 
@@ -12,7 +13,7 @@ function signToken(userId) {
   });
 }
 
-router.post('/signup', async (req, res) => {
+router.post('/signup', asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password || password.length < 8) {
     return res.status(400).json({ error: 'Valid email and password (8+ chars) required.' });
@@ -32,9 +33,9 @@ router.post('/signup', async (req, res) => {
   const user = result.rows[0];
   const token = signToken(user.id);
   res.status(201).json({ token, user });
-});
+}));
 
-router.post('/login', async (req, res) => {
+router.post('/login', asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password required.' });
@@ -56,9 +57,9 @@ router.post('/login', async (req, res) => {
     token,
     user: { id: user.id, email: user.email, plan_tier: user.plan_tier },
   });
-});
+}));
 
-router.get('/me', requireAuth, async (req, res) => {
+router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const result = await db.query(
     'SELECT id, email, plan_tier, plan_status, created_at FROM users WHERE id = $1',
     [req.userId]
@@ -67,6 +68,6 @@ router.get('/me', requireAuth, async (req, res) => {
     return res.status(404).json({ error: 'User not found.' });
   }
   res.json({ user: result.rows[0] });
-});
+}));
 
 module.exports = router;

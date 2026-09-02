@@ -1,21 +1,31 @@
 const express = require('express');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
 const { getPlan } = require('../utils/plans');
 const { checkOneProduct } = require('../services/scheduler');
 
 const router = express.Router();
 router.use(requireAuth);
 
-router.get('/', async (req, res) => {
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function requireUuidParam(req, res, next) {
+  if (!UUID_RE.test(req.params.id)) {
+    return res.status(404).json({ error: 'Product not found.' });
+  }
+  next();
+}
+
+router.get('/', asyncHandler(async (req, res) => {
   const result = await db.query(
     `SELECT * FROM tracked_products WHERE user_id = $1 ORDER BY created_at DESC`,
     [req.userId]
   );
   res.json({ products: result.rows });
-});
+}));
 
-router.post('/', async (req, res) => {
+router.post('/', asyncHandler(async (req, res) => {
   const { url, nickname, competitor_name, platform, price_selector, alert_threshold_pct, currency } = req.body;
   if (!url) {
     return res.status(400).json({ error: 'Product URL is required.' });
@@ -48,9 +58,9 @@ router.post('/', async (req, res) => {
   checkOneProduct(product).catch((err) => console.error('[products] initial check failed:', err.message));
 
   res.status(201).json({ product });
-});
+}));
 
-router.get('/:id/history', async (req, res) => {
+router.get('/:id/history', requireUuidParam, asyncHandler(async (req, res) => {
   const owned = await db.query('SELECT id FROM tracked_products WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
   if (owned.rows.length === 0) {
     return res.status(404).json({ error: 'Product not found.' });
@@ -62,9 +72,9 @@ router.get('/:id/history', async (req, res) => {
     [req.params.id]
   );
   res.json({ history: history.rows });
-});
+}));
 
-router.post('/:id/check', async (req, res) => {
+router.post('/:id/check', requireUuidParam, asyncHandler(async (req, res) => {
   const owned = await db.query('SELECT * FROM tracked_products WHERE id = $1 AND user_id = $2', [req.params.id, req.userId]);
   const product = owned.rows[0];
   if (!product) {
@@ -75,9 +85,9 @@ router.post('/:id/check', async (req, res) => {
 
   const refreshed = await db.query('SELECT * FROM tracked_products WHERE id = $1', [req.params.id]);
   res.json({ product: refreshed.rows[0] });
-});
+}));
 
-router.patch('/:id', async (req, res) => {
+router.patch('/:id', requireUuidParam, asyncHandler(async (req, res) => {
   const { nickname, is_active, alert_threshold_pct, price_selector } = req.body;
   const result = await db.query(
     `UPDATE tracked_products
@@ -93,9 +103,9 @@ router.patch('/:id', async (req, res) => {
     return res.status(404).json({ error: 'Product not found.' });
   }
   res.json({ product: result.rows[0] });
-});
+}));
 
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', requireUuidParam, asyncHandler(async (req, res) => {
   const result = await db.query(
     'DELETE FROM tracked_products WHERE id = $1 AND user_id = $2 RETURNING id',
     [req.params.id, req.userId]
@@ -104,6 +114,6 @@ router.delete('/:id', async (req, res) => {
     return res.status(404).json({ error: 'Product not found.' });
   }
   res.status(204).send();
-});
+}));
 
 module.exports = router;

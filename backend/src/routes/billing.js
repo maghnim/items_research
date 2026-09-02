@@ -2,6 +2,7 @@ const express = require('express');
 const Stripe = require('stripe');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { asyncHandler } = require('../middleware/asyncHandler');
 const { getSubscription } = require('../services/paypal');
 const { isValidCombo, envKey } = require('../utils/pricing');
 
@@ -24,7 +25,7 @@ function paypalPlanId(category, months) {
 // display-only estimate, disclosed as such; the actual charge is EUR, same as any
 // international customer paying a European merchant.
 
-router.post('/stripe/create-checkout-session', async (req, res) => {
+router.post('/stripe/create-checkout-session', asyncHandler(async (req, res) => {
   const { category, months } = req.body;
   if (!isValidCombo(category, Number(months))) {
     return res.status(400).json({ error: 'Unknown plan category or billing term.' });
@@ -55,9 +56,9 @@ router.post('/stripe/create-checkout-session', async (req, res) => {
   });
 
   res.json({ url: session.url });
-});
+}));
 
-router.get('/stripe/portal', async (req, res) => {
+router.get('/stripe/portal', asyncHandler(async (req, res) => {
   const userResult = await db.query('SELECT stripe_customer_id FROM users WHERE id = $1', [req.userId]);
   const customerId = userResult.rows[0]?.stripe_customer_id;
   if (!customerId) {
@@ -70,7 +71,7 @@ router.get('/stripe/portal', async (req, res) => {
   });
 
   res.json({ url: session.url });
-});
+}));
 
 // --- PayPal ---
 // Frontend uses the PayPal JS SDK subscription buttons directly with the plan_id
@@ -88,7 +89,7 @@ router.get('/paypal/plan-id/:category/:months', (req, res) => {
   res.json({ planId });
 });
 
-router.post('/paypal/confirm', async (req, res) => {
+router.post('/paypal/confirm', asyncHandler(async (req, res) => {
   const { subscriptionId, category, months } = req.body;
   if (!subscriptionId || !isValidCombo(category, Number(months))) {
     return res.status(400).json({ error: 'subscriptionId, category, and months are required.' });
@@ -105,6 +106,6 @@ router.post('/paypal/confirm', async (req, res) => {
   );
 
   res.json({ ok: true });
-});
+}));
 
 module.exports = router;

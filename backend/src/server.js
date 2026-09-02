@@ -10,6 +10,17 @@ const { startScheduler } = require('./services/scheduler');
 
 const app = express();
 
+// Defense-in-depth: every Express route is wrapped with asyncHandler (see
+// middleware/asyncHandler.js), but this catches anything outside the request/response
+// cycle (e.g. a stray promise in a background task) so one bad error can't take the
+// whole process — and every user's requests with it — down.
+process.on('unhandledRejection', (err) => {
+  console.error('[unhandledRejection]', err);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[uncaughtException]', err);
+});
+
 app.use(cors({ origin: process.env.APP_URL || '*' }));
 
 // Webhooks must be mounted BEFORE express.json() so Stripe's route can read the raw body.
