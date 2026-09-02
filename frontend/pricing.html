@@ -28,65 +28,36 @@
     <div class="section-head">
       <span class="eyebrow" data-i18n="pricing.eyebrow">Pricing</span>
       <h2 data-i18n="pricing.h2">Plans that scale with how many competitors you track</h2>
-      <p data-i18n="pricing.p">Every plan includes a 14-day free trial. No credit card required to start.</p>
+      <p data-i18n="pricing.p">Prices in EUR. Choose a category, then the billing term that suits you.</p>
     </div>
 
-    <div class="pricing-grid">
-      <div class="plan-card">
-        <h3 data-i18n="pricing.plan.starter.name">Starter</h3>
-        <p class="plan-desc" data-i18n="pricing.plan.starter.desc">For a single store keeping an eye on a few rivals.</p>
-        <div class="plan-price">$15<span data-i18n="common.perMonth">/mo</span></div>
-        <ul class="plan-features">
-          <li data-i18n="pricing.plan.starter.f1">10 tracked products</li>
-          <li data-i18n="pricing.plan.starter.f2">Checked every 6 hours</li>
-          <li data-i18n="pricing.plan.starter.f3">Email alerts</li>
-          <li data-i18n="pricing.plan.starter.f4">90-day price history</li>
-        </ul>
-        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.starter.cta" onclick="startStripeCheckout('starter')">Choose Starter</button>
-      </div>
-
-      <div class="plan-card featured">
-        <span class="plan-badge" data-i18n="pricing.badge.popular">Most popular</span>
-        <h3 data-i18n="pricing.plan.growth.name">Growth</h3>
-        <p class="plan-desc" data-i18n="pricing.plan.growth.desc">For growing stores tracking a full competitive set.</p>
-        <div class="plan-price">$39<span data-i18n="common.perMonth">/mo</span></div>
-        <ul class="plan-features">
-          <li data-i18n="pricing.plan.growth.f1">50 tracked products</li>
-          <li data-i18n="pricing.plan.growth.f2">Checked every hour</li>
-          <li data-i18n="pricing.plan.growth.f3">Email alerts + thresholds</li>
-          <li data-i18n="pricing.plan.growth.f4">Unlimited price history</li>
-        </ul>
-        <button class="btn btn-primary btn-block" data-i18n="pricing.plan.growth.cta" onclick="startStripeCheckout('growth')">Choose Growth</button>
-      </div>
-
-      <div class="plan-card">
-        <h3 data-i18n="pricing.plan.pro.name">Pro</h3>
-        <p class="plan-desc" data-i18n="pricing.plan.pro.desc">For teams that need near real-time visibility.</p>
-        <div class="plan-price">$89<span data-i18n="common.perMonth">/mo</span></div>
-        <ul class="plan-features">
-          <li data-i18n="pricing.plan.pro.f1">200 tracked products</li>
-          <li data-i18n="pricing.plan.pro.f2">Checked every 15 minutes</li>
-          <li data-i18n="pricing.plan.pro.f3">Priority alert delivery</li>
-          <li data-i18n="pricing.plan.pro.f4">Unlimited price history</li>
-        </ul>
-        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.pro.cta" onclick="startStripeCheckout('pro')">Choose Pro</button>
-      </div>
-
-      <div class="plan-card">
-        <h3 data-i18n="pricing.plan.agency.name">Agency</h3>
-        <p class="plan-desc" data-i18n="pricing.plan.agency.desc">For agencies managing pricing across many client stores.</p>
-        <div class="plan-price">$199<span data-i18n="common.perMonth">/mo</span></div>
-        <ul class="plan-features">
-          <li data-i18n="pricing.plan.agency.f1">Unlimited tracked products</li>
-          <li data-i18n="pricing.plan.agency.f2">Checked every 15 minutes</li>
-          <li data-i18n="pricing.plan.agency.f3">API access</li>
-          <li data-i18n="pricing.plan.agency.f4">Priority support</li>
-        </ul>
-        <button class="btn btn-outline btn-block" data-i18n="pricing.plan.agency.cta" onclick="startStripeCheckout('agency')">Choose Agency</button>
-      </div>
+    <div class="pricing-tabs">
+      <button class="pricing-tab" data-category="standard" data-i18n="pricing.cat.standard">Standard</button>
+      <button class="pricing-tab active" data-category="premium" data-i18n="pricing.cat.premium">Premium</button>
+      <button class="pricing-tab" data-category="premiumplus" data-i18n="pricing.cat.premiumplus">Premium Plus</button>
+      <button class="pricing-tab" data-category="vip" data-i18n="pricing.cat.vip">VIP</button>
     </div>
 
-    <p style="text-align:center; margin-top:32px; color:#64748b; font-size:14px;" data-i18n="pricing.paypal.note">
+    <p id="pricing-meta" class="pricing-meta"></p>
+
+    <div class="pricing-table-wrap">
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th data-i18n="pricing.table.term">Billing term</th>
+            <th data-i18n="pricing.table.price">Price</th>
+            <th data-i18n="pricing.table.permonth">Per month</th>
+            <th data-i18n="pricing.table.savings">You save</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="pricing-tbody"></tbody>
+      </table>
+    </div>
+
+    <p id="pricing-usd-note" class="pricing-usd-note" data-i18n="pricing.usd.note" style="display:none;"></p>
+
+    <p style="text-align:center; margin-top:24px; color:#64748b; font-size:14px;" data-i18n="pricing.paypal.note">
       Prefer PayPal? You can switch your payment method to PayPal after starting your trial from the billing page in your dashboard.
     </p>
   </div>
@@ -160,3 +131,4 @@
 <script src="js/i18n.js"></script>
 <script src="js/api.js"></script>
 <script src="js/billing.js"></script>
+<script src="js/pricing.js"></script>

@@ -314,7 +314,110 @@ section { padding: 84px 0; }
 
 .section-alt { background: var(--blue-50); }
 
-/* ---------- Pricing ---------- */
+/* ---------- Pricing: category tabs + term table ---------- */
+.pricing-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  background: var(--blue-50);
+  border-radius: 12px;
+  padding: 6px;
+  max-width: 640px;
+  margin: 0 auto 20px;
+}
+.pricing-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  color: var(--slate-500);
+  font-family: var(--font);
+  font-weight: 600;
+  font-size: 14px;
+  padding: 11px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.pricing-tab:hover { color: var(--navy-900); }
+.pricing-tab.active {
+  background: white;
+  color: var(--blue-700);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.12);
+}
+
+.pricing-meta {
+  text-align: center;
+  color: var(--slate-500);
+  font-size: 14px;
+  margin: 0 0 28px;
+}
+
+.pricing-table-wrap {
+  max-width: 780px;
+  margin: 0 auto;
+  background: white;
+  border: 1px solid var(--slate-200);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.pricing-table { width: 100%; border-collapse: collapse; }
+.pricing-table th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--slate-500);
+  font-weight: 600;
+  background: #f8fafc;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--slate-200);
+}
+.pricing-table td {
+  padding: 16px 20px;
+  font-size: 14.5px;
+  border-bottom: 1px solid var(--slate-200);
+  vertical-align: middle;
+}
+.pricing-table tr:last-child td { border-bottom: none; }
+.pricing-table tr.pricing-row-best { background: var(--blue-50); }
+.pricing-table .price-cell { font-weight: 700; font-size: 16px; }
+.permonth-suffix { color: var(--slate-500); font-size: 12.5px; }
+.badge-best {
+  display: inline-block;
+  margin-left: 8px;
+  background: var(--blue-600);
+  color: white;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 999px;
+  vertical-align: middle;
+}
+.savings-pill {
+  display: inline-block;
+  background: #f0fdf4;
+  color: var(--success);
+  font-size: 12.5px;
+  font-weight: 700;
+  padding: 3px 9px;
+  border-radius: 999px;
+}
+.pricing-usd-note {
+  max-width: 780px;
+  margin: 14px auto 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--slate-500);
+}
+
+@media (max-width: 640px) {
+  .pricing-tabs { flex-wrap: wrap; }
+  .pricing-table th:nth-child(3), .pricing-table td:nth-child(3) { display: none; }
+}
+
 .pricing-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);

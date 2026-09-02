@@ -3,33 +3,36 @@ const Stripe = require('stripe');
 const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { getSubscription } = require('../services/paypal');
+const { isValidCombo, envKey } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const router = express.Router();
 router.use(requireAuth);
 
-const STRIPE_PRICE_BY_TIER = {
-  starter: process.env.STRIPE_PRICE_STARTER,
-  growth: process.env.STRIPE_PRICE_GROWTH,
-  pro: process.env.STRIPE_PRICE_PRO,
-  agency: process.env.STRIPE_PRICE_AGENCY,
-};
+function stripePriceId(category, months) {
+  return process.env[envKey('STRIPE_PRICE', category, months)];
+}
 
-const PAYPAL_PLAN_BY_TIER = {
-  starter: process.env.PAYPAL_PLAN_STARTER,
-  growth: process.env.PAYPAL_PLAN_GROWTH,
-  pro: process.env.PAYPAL_PLAN_PRO,
-  agency: process.env.PAYPAL_PLAN_AGENCY,
-};
+function paypalPlanId(category, months) {
+  return process.env[envKey('PAYPAL_PLAN', category, months)];
+}
 
 // --- Stripe ---
+// Billing always runs in EUR (the merchant's base currency) regardless of what the
+// pricing page displayed — the frontend's USD figure for English-speaking visitors is a
+// display-only estimate, disclosed as such; the actual charge is EUR, same as any
+// international customer paying a European merchant.
 
 router.post('/stripe/create-checkout-session', async (req, res) => {
-  const { tier } = req.body;
-  const priceId = STRIPE_PRICE_BY_TIER[tier];
+  const { category, months } = req.body;
+  if (!isValidCombo(category, Number(months))) {
+    return res.status(400).json({ error: 'Unknown plan category or billing term.' });
+  }
+
+  const priceId = stripePriceId(category, months);
   if (!priceId) {
-    return res.status(400).json({ error: 'Unknown plan tier.' });
+    return res.status(400).json({ error: `Stripe price is not configured yet for ${category} / ${months} month(s).` });
   }
 
   const userResult = await db.query('SELECT * FROM users WHERE id = $1', [req.userId]);
@@ -48,7 +51,7 @@ router.post('/stripe/create-checkout-session', async (req, res) => {
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.APP_URL}/dashboard.html?checkout=success`,
     cancel_url: `${process.env.APP_URL}/pricing.html?checkout=cancelled`,
-    metadata: { userId: user.id, tier },
+    metadata: { userId: user.id, category, months: String(months) },
   });
 
   res.json({ url: session.url });
@@ -71,20 +74,24 @@ router.get('/stripe/portal', async (req, res) => {
 
 // --- PayPal ---
 // Frontend uses the PayPal JS SDK subscription buttons directly with the plan_id
-// for the chosen tier, then posts the resulting subscriptionID here to confirm it.
+// for the chosen category+term, then posts the resulting subscriptionID here to confirm it.
 
-router.get('/paypal/plan-id/:tier', (req, res) => {
-  const planId = PAYPAL_PLAN_BY_TIER[req.params.tier];
+router.get('/paypal/plan-id/:category/:months', (req, res) => {
+  const { category, months } = req.params;
+  if (!isValidCombo(category, Number(months))) {
+    return res.status(400).json({ error: 'Unknown plan category or billing term.' });
+  }
+  const planId = paypalPlanId(category, months);
   if (!planId) {
-    return res.status(400).json({ error: 'Unknown plan tier.' });
+    return res.status(400).json({ error: `PayPal plan is not configured yet for ${category} / ${months} month(s).` });
   }
   res.json({ planId });
 });
 
 router.post('/paypal/confirm', async (req, res) => {
-  const { subscriptionId, tier } = req.body;
-  if (!subscriptionId || !tier) {
-    return res.status(400).json({ error: 'subscriptionId and tier are required.' });
+  const { subscriptionId, category, months } = req.body;
+  if (!subscriptionId || !isValidCombo(category, Number(months))) {
+    return res.status(400).json({ error: 'subscriptionId, category, and months are required.' });
   }
 
   const subscription = await getSubscription(subscriptionId);
@@ -93,8 +100,8 @@ router.post('/paypal/confirm', async (req, res) => {
   }
 
   await db.query(
-    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_status = 'active' WHERE id = $3`,
-    [subscriptionId, tier, req.userId]
+    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active' WHERE id = $4`,
+    [subscriptionId, category, months, req.userId]
   );
 
   res.json({ ok: true });

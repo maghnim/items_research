@@ -4,6 +4,7 @@
 
 (function () {
   var STORAGE_KEY = 'pp_lang';
+  var CURRENCY_KEY = 'pp_currency';
   var FRENCH_COUNTRIES = [
     'FR', 'BE', // France, Belgium
     'MA', 'DZ', 'TN', // Morocco, Algeria, Tunisia
@@ -11,6 +12,19 @@
     'CM', 'GA', 'CG', 'CD', 'CF', // Central Africa
     'MG', 'RW', 'BI', 'DJ', 'KM', // East/Indian Ocean Africa
   ];
+  // English-speaking markets shown USD instead of the EUR base price (display only —
+  // billing itself always runs in EUR, see backend/src/routes/billing.js).
+  var USD_COUNTRIES = ['US', 'GB', 'CA', 'AU', 'NZ', 'IE'];
+
+  function getCurrency() {
+    return localStorage.getItem(CURRENCY_KEY) || 'EUR';
+  }
+
+  function notifyLocaleReady() {
+    window.dispatchEvent(new CustomEvent('pp:locale-ready', {
+      detail: { lang: document.documentElement.getAttribute('lang'), currency: getCurrency() },
+    }));
+  }
 
   function getDict(lang) {
     return (window.TRANSLATIONS && window.TRANSLATIONS[lang]) || {};
@@ -68,20 +82,33 @@
   }
 
   function maybeUpgradeFromGeo() {
-    if (localStorage.getItem(STORAGE_KEY)) return; // already resolved (user choice or a prior visit)
+    // Language and currency cache independently, but share a single geo lookup.
+    var langResolved = !!localStorage.getItem(STORAGE_KEY);
+    var currencyResolved = !!localStorage.getItem(CURRENCY_KEY);
+    if (langResolved && currencyResolved) return;
 
     fetch('https://ipwho.is/', { signal: AbortSignal ? AbortSignal.timeout(3000) : undefined })
       .then(function (res) { return res.json(); })
       .then(function (data) {
-        if (!data || data.success === false) return;
-        var lang = FRENCH_COUNTRIES.indexOf(data.country_code) !== -1 ? 'fr' : 'en';
-        localStorage.setItem(STORAGE_KEY, lang);
-        applyTranslations(lang);
+        if (!data || data.success === false) throw new Error('geo lookup failed');
+
+        if (!langResolved) {
+          var lang = FRENCH_COUNTRIES.indexOf(data.country_code) !== -1 ? 'fr' : 'en';
+          localStorage.setItem(STORAGE_KEY, lang);
+          applyTranslations(lang);
+        }
+        if (!currencyResolved) {
+          var currency = USD_COUNTRIES.indexOf(data.country_code) !== -1 ? 'USD' : 'EUR';
+          localStorage.setItem(CURRENCY_KEY, currency);
+        }
+        notifyLocaleReady();
       })
       .catch(function () {
         // Network/geo lookup failed — keep the browser-language guess already applied,
-        // and cache it so we don't retry the lookup on every page.
-        localStorage.setItem(STORAGE_KEY, quickInitialGuess());
+        // and cache defaults so we don't retry the lookup on every page.
+        if (!langResolved) localStorage.setItem(STORAGE_KEY, quickInitialGuess());
+        if (!currencyResolved) localStorage.setItem(CURRENCY_KEY, 'EUR');
+        notifyLocaleReady();
       });
   }
 
@@ -96,4 +123,5 @@
 
   window.t = t;
   window.setLanguage = setLanguage;
+  window.getCurrency = getCurrency;
 })();

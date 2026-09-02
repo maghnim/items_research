@@ -7,7 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   paypal_subscription_id TEXT,
-  plan_tier TEXT NOT NULL DEFAULT 'trial', -- trial | starter | growth | pro | agency
+  plan_tier TEXT NOT NULL DEFAULT 'trial', -- trial | standard | premium | premiumplus | vip
+  plan_duration_months INTEGER, -- billing term chosen at checkout: 1 | 3 | 6 | 12
   plan_status TEXT NOT NULL DEFAULT 'active', -- active | past_due | canceled
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -60,6 +61,7 @@ CREATE TABLE IF NOT EXISTS scrape_jobs (
 -- Safe to re-run: adds columns introduced after the initial release for tables
 -- that already exist in a deployed database.
 ALTER TABLE tracked_products ADD COLUMN IF NOT EXISTS last_currency TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_duration_months INTEGER;
 
 CREATE INDEX IF NOT EXISTS idx_products_user ON tracked_products(user_id);
 CREATE INDEX IF NOT EXISTS idx_history_product ON price_history(product_id, scraped_at DESC);

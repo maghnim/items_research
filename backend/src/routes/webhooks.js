@@ -1,17 +1,21 @@
 const express = require('express');
 const Stripe = require('stripe');
 const db = require('../db');
+const { CATEGORIES, DURATIONS, envKey } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
 const router = express.Router();
 
-const TIER_BY_STRIPE_PRICE = {
-  [process.env.STRIPE_PRICE_STARTER]: 'starter',
-  [process.env.STRIPE_PRICE_GROWTH]: 'growth',
-  [process.env.STRIPE_PRICE_PRO]: 'pro',
-  [process.env.STRIPE_PRICE_AGENCY]: 'agency',
-};
+// Reverse-lookup table: Stripe price ID -> { category, months }, built from the same
+// 16 STRIPE_PRICE_<CATEGORY>_<MONTHS> env vars used to create checkout sessions.
+const PLAN_BY_STRIPE_PRICE = {};
+for (const category of CATEGORIES) {
+  for (const months of DURATIONS) {
+    const priceId = process.env[envKey('STRIPE_PRICE', category, months)];
+    if (priceId) PLAN_BY_STRIPE_PRICE[priceId] = { category, months };
+  }
+}
 
 // NOTE: this route must receive the raw body (see server.js) for signature verification.
 router.post('/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
@@ -29,11 +33,12 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         const session = event.data.object;
         const subscriptionId = session.subscription;
         const userId = session.metadata?.userId;
-        const tier = session.metadata?.tier;
-        if (userId && tier) {
+        const category = session.metadata?.category;
+        const months = session.metadata?.months;
+        if (userId && category) {
           await db.query(
-            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_status = 'active' WHERE id = $3`,
-            [subscriptionId, tier, userId]
+            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active' WHERE id = $4`,
+            [subscriptionId, category, months, userId]
           );
         }
         break;
@@ -41,11 +46,15 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
       case 'customer.subscription.updated': {
         const sub = event.data.object;
         const priceId = sub.items.data[0]?.price?.id;
-        const tier = TIER_BY_STRIPE_PRICE[priceId];
+        const plan = PLAN_BY_STRIPE_PRICE[priceId];
         const status = sub.status === 'active' ? 'active' : sub.status;
         await db.query(
-          `UPDATE users SET plan_tier = COALESCE($1, plan_tier), plan_status = $2 WHERE stripe_customer_id = $3`,
-          [tier || null, status, sub.customer]
+          `UPDATE users
+           SET plan_tier = COALESCE($1, plan_tier),
+               plan_duration_months = COALESCE($2, plan_duration_months),
+               plan_status = $3
+           WHERE stripe_customer_id = $4`,
+          [plan?.category || null, plan?.months || null, status, sub.customer]
         );
         break;
       }
