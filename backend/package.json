@@ -1,7 +1,7 @@
 {
   "name": "pricepilot-backend",
   "version": "1.0.0",
-  "description": "PricePilot - competitor price tracking SaaS backend",
+  "description": "Pricera - competitor price tracking SaaS backend",
   "main": "src/server.js",
   "engines": {
     "node": ">=18.0.0"

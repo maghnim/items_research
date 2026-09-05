@@ -1,6 +1,6 @@
-# PricePilot
+# Pricera
 
-Automated competitor price tracking SaaS. Users add competitor product URLs; PricePilot scrapes them on a schedule, logs price history, and emails an alert the moment a price or stock status changes.
+Automated competitor price tracking SaaS. Users add competitor product URLs; Pricera scrapes them on a schedule, logs price history, and emails an alert the moment a price or stock status changes.
 
 ## Structure
 

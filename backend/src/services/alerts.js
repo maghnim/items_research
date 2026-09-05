@@ -82,7 +82,7 @@ function alertHtml(event, product) {
   const name = product.nickname || product.competitor_name || product.url;
   return `
     <div style="font-family: Arial, sans-serif; color: #0F172A;">
-      <h2 style="color:#2563EB;">PricePilot Alert</h2>
+      <h2 style="color:#2563EB;">Pricera Alert</h2>
       <p><strong>${name}</strong></p>
       <p>${alertSubject(event, product)}</p>
       ${event.oldPrice ? `<p>Previous price: ${formatAmount(event.oldPrice, event.currency)}</p>` : ''}

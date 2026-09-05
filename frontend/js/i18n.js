@@ -1,4 +1,4 @@
-// PricePilot i18n engine — no build step, plain script.
+// Pricera i18n engine — no build step, plain script.
 // Language resolution order: explicit saved choice > IP-geolocation (France, Belgium,
 // French-speaking Africa) > browser language > English default.
 

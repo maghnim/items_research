@@ -1,4 +1,4 @@
-# Deploying the PricePilot demo — 100% free stack
+# Deploying the Pricera demo — 100% free stack
 
 This uses **Neon** (free Postgres, no card required) + **Render** (free web service + free static site) + **Resend** (free email tier) + **Stripe test mode** / **PayPal sandbox** (both free, no live money involved). Total cost: $0.
 
@@ -9,7 +9,7 @@ Render deploys from a Git repo, so the code needs to live on GitHub first.
 ```bash
 cd pricepilot
 git add .
-git commit -m "Initial PricePilot scaffold"
+git commit -m "Initial Pricera scaffold"
 ```
 
 Then create a new empty repo at https://github.com/new (public or private, your choice), and:
