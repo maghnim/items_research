@@ -8,7 +8,7 @@ async function sendAlertEmail({ to, subject, html }) {
     return;
   }
   await resend.emails.send({
-    from: process.env.ALERT_FROM_EMAIL || 'alerts@pricera.online',
+    from: process.env.ALERT_FROM_EMAIL || 'support@pricera.online',
     to,
     subject,
     html,

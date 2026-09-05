@@ -244,7 +244,7 @@ en: {
   'privacy.s9.h2': '9. Changes to This Policy',
   'privacy.s9.p': 'We may update this Privacy Policy from time to time. We will notify users of material changes by email or through the Service.',
   'privacy.s10.h2': '10. Contact Us',
-  'privacy.s10.p.html': 'Questions about this policy can be sent to <a href="mailto:privacy@pricera.online">privacy@pricera.online</a> or via our <a href="contact.html">contact page</a>.',
+  'privacy.s10.p.html': 'Questions about this policy can be sent to <a href="mailto:support@pricera.online">support@pricera.online</a> or via our <a href="contact.html">contact page</a>.',
 
   'terms.h1': 'Terms of Service',
   'terms.updated': 'Effective date: September 1, 2026',
@@ -300,13 +300,13 @@ en: {
   'refund.s4.li1': 'You were charged due to a verified billing error or duplicate charge.',
   'refund.s4.li2': 'The Service was unavailable or materially non-functional for a significant portion of your billing period due to an issue on our end.',
   'refund.s4.li3': 'You were charged after requesting cancellation before the renewal date.',
-  'refund.s4.p2.html': 'To request a refund under these circumstances, contact us within 14 days of the charge at <a href="mailto:billing@pricera.online">billing@pricera.online</a> with your account email and the reason for the request. We aim to respond within 3 business days.',
+  'refund.s4.p2.html': 'To request a refund under these circumstances, contact us within 14 days of the charge at <a href="mailto:support@pricera.online">support@pricera.online</a> with your account email and the reason for the request. We aim to respond within 3 business days.',
   'refund.s5.h2': '5. Plan Changes',
   'refund.s5.p': 'If you upgrade your plan, the new rate applies immediately and is prorated for the remainder of the current billing cycle. If you downgrade, the new rate takes effect at the start of your next billing cycle.',
   'refund.s6.h2': '6. Payment Method',
   'refund.s6.p': 'Approved refunds are issued to the original payment method used (Stripe for card payments, or PayPal for PayPal subscriptions) and may take 5–10 business days to appear depending on your bank or PayPal processing times.',
   'refund.s7.h2': '7. Contact Us',
-  'refund.s7.p.html': 'For any billing or refund question, reach us at <a href="mailto:billing@pricera.online">billing@pricera.online</a> or via our <a href="contact.html">contact page</a>.',
+  'refund.s7.p.html': 'For any billing or refund question, reach us at <a href="mailto:support@pricera.online">support@pricera.online</a> or via our <a href="contact.html">contact page</a>.',
 },
 
 fr: {
@@ -554,7 +554,7 @@ fr: {
   'privacy.s9.h2': '9. Modifications de cette politique',
   'privacy.s9.p': "Nous pouvons mettre à jour cette politique de confidentialité de temps à autre. Nous informerons les utilisateurs des changements importants par email ou via le Service.",
   'privacy.s10.h2': '10. Nous contacter',
-  'privacy.s10.p.html': 'Pour toute question sur cette politique, écrivez à <a href="mailto:privacy@pricera.online">privacy@pricera.online</a> ou via notre <a href="contact.html">page de contact</a>.',
+  'privacy.s10.p.html': 'Pour toute question sur cette politique, écrivez à <a href="mailto:support@pricera.online">support@pricera.online</a> ou via notre <a href="contact.html">page de contact</a>.',
 
   'terms.h1': "Conditions d'utilisation",
   'terms.updated': "Date d'entrée en vigueur : 1er septembre 2026",
@@ -610,12 +610,12 @@ fr: {
   'refund.s4.li1': "Vous avez été facturé à la suite d'une erreur de facturation vérifiée ou d'un double prélèvement.",
   'refund.s4.li2': "Le Service a été indisponible ou substantiellement non fonctionnel pendant une part importante de votre période de facturation, en raison d'un problème de notre côté.",
   'refund.s4.li3': "Vous avez été facturé après avoir demandé l'annulation avant la date de renouvellement.",
-  'refund.s4.p2.html': 'Pour demander un remboursement dans ces circonstances, contactez-nous dans les 14 jours suivant le prélèvement à <a href="mailto:billing@pricera.online">billing@pricera.online</a> en indiquant l\'email de votre compte et le motif de la demande. Nous visons à répondre sous 3 jours ouvrés.',
+  'refund.s4.p2.html': 'Pour demander un remboursement dans ces circonstances, contactez-nous dans les 14 jours suivant le prélèvement à <a href="mailto:support@pricera.online">support@pricera.online</a> en indiquant l\'email de votre compte et le motif de la demande. Nous visons à répondre sous 3 jours ouvrés.',
   'refund.s5.h2': '5. Changements de forfait',
   'refund.s5.p': "Si vous passez à un forfait supérieur, le nouveau tarif s'applique immédiatement et est calculé au prorata pour le reste du cycle de facturation en cours. Si vous rétrogradez, le nouveau tarif prend effet au début de votre prochain cycle de facturation.",
   'refund.s6.h2': '6. Mode de paiement',
   'refund.s6.p': "Les remboursements approuvés sont effectués sur le mode de paiement d'origine (Stripe pour les paiements par carte, ou PayPal pour les abonnements PayPal) et peuvent prendre 5 à 10 jours ouvrés selon les délais de traitement de votre banque ou de PayPal.",
   'refund.s7.h2': '7. Nous contacter',
-  'refund.s7.p.html': 'Pour toute question de facturation ou de remboursement, contactez-nous à <a href="mailto:billing@pricera.online">billing@pricera.online</a> ou via notre <a href="contact.html">page de contact</a>.',
+  'refund.s7.p.html': 'Pour toute question de facturation ou de remboursement, contactez-nous à <a href="mailto:support@pricera.online">support@pricera.online</a> ou via notre <a href="contact.html">page de contact</a>.',
 },
 };
