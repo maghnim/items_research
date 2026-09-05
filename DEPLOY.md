@@ -61,18 +61,20 @@ If Render assigns different subdomains (names can be taken), update:
 
 1. Sign up free at https://dashboard.stripe.com/register.
 2. Stay in **Test mode** (toggle top-right).
-3. Go to **Product catalog → Add product**, create 4 products with recurring monthly prices: Starter $15, Growth $39, Pro $89, Agency $199. Copy each price's `price_...` ID into `STRIPE_PRICE_STARTER/GROWTH/PRO/AGENCY`.
-4. Go to **Developers → API keys**, copy the test **Secret key** into `STRIPE_SECRET_KEY`.
-5. Go to **Developers → Webhooks → Add endpoint**, URL = `https://pricepilot-api.onrender.com/api/webhooks/stripe`, events = `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
-6. Test card for checkout: `4242 4242 4242 4242`, any future expiry, any CVC.
+3. Go to **Product catalog → Add product**, create one product with a **one-time** price of **€2.99** — this is the trial unlock. Copy its `price_...` ID into `STRIPE_PRICE_TRIAL`. Without this, signup's checkout step fails for every user.
+4. Create 4 more products, each with 4 **recurring** monthly-equivalent EUR prices (1/3/6/12-month billing intervals) for the categories **Standard, Premium, Premium Plus, VIP** — see `backend/.env.example` for exact amounts and the 16 env var names (`STRIPE_PRICE_<CATEGORY>_<MONTHS>`). Copy each price's `price_...` ID into the matching env var.
+5. Go to **Developers → API keys**, copy the test **Secret key** into `STRIPE_SECRET_KEY`.
+6. Go to **Developers → Webhooks → Add endpoint**, URL = `https://pricepilot-api.onrender.com/api/webhooks/stripe`, events = `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
+7. Test card for checkout: `4242 4242 4242 4242`, any future expiry, any CVC.
 
 ## 6. PayPal (sandbox — no real charges)
 
 1. Sign up free at https://developer.paypal.com (uses your normal PayPal account or a new one).
 2. In the Developer Dashboard, stay in **Sandbox** mode.
-3. **Apps & Credentials → Create App** → copy Client ID / Secret into `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`. Leave `PAYPAL_MODE=sandbox`.
-4. Under **Billing Plans**, create a Product + 4 monthly Plans matching the tiers above. Copy each Plan ID into `PAYPAL_PLAN_STARTER/GROWTH/PRO/AGENCY`.
-5. Sandbox test buyer accounts are auto-generated under **Sandbox → Accounts** — use one of those to test a subscription end-to-end.
+3. **Apps & Credentials → Create App** → copy Client ID / Secret into `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`. Leave `PAYPAL_MODE=sandbox`. (No extra config needed for the trial unlock — it uses the PayPal Orders API directly with the client ID/secret, not a Billing Plan.)
+4. On the same app, under **Webhooks → Add Webhook**, URL = `https://pricepilot-api-cfl6.onrender.com/api/webhooks/paypal`, subscribed to at least `BILLING.SUBSCRIPTION.ACTIVATED`, `BILLING.SUBSCRIPTION.CANCELLED`, `BILLING.SUBSCRIPTION.SUSPENDED`. Copy the resulting **Webhook ID** into `PAYPAL_WEBHOOK_ID` — the backend rejects unsigned/unverifiable events, so webhook updates silently fail without this.
+5. Under **Billing Plans**, create a Product + 16 monthly Plans matching the 4 categories × 4 billing terms above. Copy each Plan ID into the matching `PAYPAL_PLAN_<CATEGORY>_<MONTHS>` env var (see `backend/.env.example`).
+6. Sandbox test buyer accounts are auto-generated under **Sandbox → Accounts** — use one of those to test the trial unlock and a subscription end-to-end.
 
 ## 7. Smoke test
 

@@ -47,4 +47,24 @@ async function captureOrder(orderId) {
   return response.data;
 }
 
-module.exports = { getAccessToken, getSubscription, createOrder, captureOrder, BASE_URL };
+// Verifies an incoming webhook actually came from PayPal, per
+// https://developer.paypal.com/api/rest/webhooks/rest/#link-verifysignature
+async function verifyWebhookSignature(headers, body) {
+  const token = await getAccessToken();
+  const response = await axios.post(
+    `${BASE_URL}/v1/notifications/verify-webhook-signature`,
+    {
+      auth_algo: headers['paypal-auth-algo'],
+      cert_url: headers['paypal-cert-url'],
+      transmission_id: headers['paypal-transmission-id'],
+      transmission_sig: headers['paypal-transmission-sig'],
+      transmission_time: headers['paypal-transmission-time'],
+      webhook_id: process.env.PAYPAL_WEBHOOK_ID,
+      webhook_event: body,
+    },
+    { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' } }
+  );
+  return response.data.verification_status === 'SUCCESS';
+}
+
+module.exports = { getAccessToken, getSubscription, createOrder, captureOrder, verifyWebhookSignature, BASE_URL };

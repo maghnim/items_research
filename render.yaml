@@ -20,7 +20,7 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: APP_URL
-        value: https://pricepilot-app.onrender.com
+        value: https://pricera.online
       - key: API_URL
         value: https://pricepilot-api-cfl6.onrender.com
       # Fill these in from the Render dashboard after the service is created
@@ -34,6 +34,10 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      # One-time (non-recurring) Price for the EUR 2.99 / 14-day trial unlock.
+      # Required at signup — checkout fails with no trial price configured until this is set.
+      - key: STRIPE_PRICE_TRIAL
         sync: false
       # 4 categories (standard/premium/premiumplus/vip) x 4 billing terms (1/3/6/12 months)
       # = 16 Stripe Prices, all EUR. See backend/.env.example for the full list of keys.
@@ -75,6 +79,10 @@ services:
         sync: false
       - key: PAYPAL_MODE
         value: sandbox
+      # ID of the webhook registered in the PayPal Developer Dashboard, used to verify
+      # that incoming /api/webhooks/paypal requests actually came from PayPal.
+      - key: PAYPAL_WEBHOOK_ID
+        sync: false
       # Same 16 combos as PayPal Billing Plans.
       - key: PAYPAL_PLAN_STANDARD_1
         sync: false

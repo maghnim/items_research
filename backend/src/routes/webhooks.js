@@ -2,6 +2,7 @@ const express = require('express');
 const Stripe = require('stripe');
 const db = require('../db');
 const { CATEGORIES, DURATIONS, envKey, TRIAL_DURATION_DAYS } = require('../utils/pricing');
+const { verifyWebhookSignature } = require('../services/paypal');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -85,10 +86,21 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
 });
 
 // PayPal sends JSON events (BILLING.SUBSCRIPTION.CANCELLED, .SUSPENDED, .ACTIVATED, etc).
-// In production, verify the signature via PayPal's /v1/notifications/verify-webhook-signature.
 router.post('/paypal', express.json(), async (req, res) => {
   const event = req.body;
   try {
+    let verified;
+    try {
+      verified = await verifyWebhookSignature(req.headers, event);
+    } catch (err) {
+      console.error('[webhooks/paypal] signature verification request failed:', err.message);
+      return res.status(400).json({ error: 'Webhook signature verification failed.' });
+    }
+    if (!verified) {
+      console.error('[webhooks/paypal] signature verification rejected the event.');
+      return res.status(400).json({ error: 'Invalid webhook signature.' });
+    }
+
     const resource = event.resource || {};
     const subscriptionId = resource.id;
 
