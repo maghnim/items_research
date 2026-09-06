@@ -15,6 +15,7 @@ async function checkPaymentStatus() {
     const titleEl = document.getElementById('paywall-title');
     const bodyEl = document.getElementById('paywall-body');
     const ctaEl = document.getElementById('paywall-cta');
+    const cta2El = document.getElementById('paywall-cta-2');
     const addBtn = document.getElementById('open-add-modal');
 
     const trialExpired = fresh.plan_tier === 'trial' && fresh.trial_expires_at && new Date(fresh.trial_expires_at) < new Date();
@@ -22,8 +23,11 @@ async function checkPaymentStatus() {
     if (fresh.plan_status !== 'active') {
       titleEl.textContent = t('dashboard.paywall.pending.title');
       bodyEl.textContent = t('dashboard.paywall.pending.body');
-      ctaEl.textContent = t('dashboard.paywall.pending.cta');
-      ctaEl.onclick = startTrialCheckout;
+      ctaEl.textContent = t('dashboard.paywall.pending.cta24h');
+      ctaEl.onclick = () => startTrialCheckout('24h');
+      cta2El.textContent = t('dashboard.paywall.pending.cta7d');
+      cta2El.onclick = () => startTrialCheckout('7d');
+      cta2El.style.display = 'inline-block';
       banner.style.display = 'flex';
       if (addBtn) addBtn.disabled = true;
     } else if (trialExpired) {
@@ -31,6 +35,7 @@ async function checkPaymentStatus() {
       bodyEl.textContent = t('dashboard.paywall.expired.body');
       ctaEl.textContent = t('dashboard.paywall.expired.cta');
       ctaEl.onclick = () => { window.location.href = 'pricing.html'; };
+      cta2El.style.display = 'none';
       banner.style.display = 'flex';
       if (addBtn) addBtn.disabled = true;
     }

@@ -35,9 +35,11 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      # One-time (non-recurring) Price for the EUR 2.99 / 14-day trial unlock.
-      # Required at signup — checkout fails with no trial price configured until this is set.
-      - key: STRIPE_PRICE_TRIAL
+      # One-time (non-recurring) Prices for the two trial options (24h / 7d).
+      # Required at signup — checkout fails with no trial price configured until these are set.
+      - key: STRIPE_PRICE_TRIAL_24H
+        sync: false
+      - key: STRIPE_PRICE_TRIAL_7D
         sync: false
       # 4 categories (standard/premium/premiumplus/vip) x 4 billing terms (1/3/6/12 months)
       # = 16 Stripe Prices, all EUR. See backend/.env.example for the full list of keys.
@@ -115,6 +117,9 @@ services:
       - key: PAYPAL_PLAN_VIP_6
         sync: false
       - key: PAYPAL_PLAN_VIP_12
+        sync: false
+      # Polar.sh organization access token (scope: checkouts:write).
+      - key: POLAR_ACCESS_TOKEN
         sync: false
 
   # Frontend — static site, always free on Render.

@@ -14,9 +14,12 @@ function signToken(userId) {
 }
 
 router.post('/signup', asyncHandler(async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password, fullName, phone } = req.body;
   if (!email || !password || password.length < 8) {
     return res.status(400).json({ error: 'Valid email and password (8+ chars) required.' });
+  }
+  if (!fullName || !fullName.trim()) {
+    return res.status(400).json({ error: 'Full name is required.' });
   }
 
   const existing = await db.query('SELECT id FROM users WHERE email = $1', [email.toLowerCase()]);
@@ -26,8 +29,8 @@ router.post('/signup', asyncHandler(async (req, res) => {
 
   const passwordHash = await bcrypt.hash(password, 12);
   const result = await db.query(
-    `INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, plan_tier, plan_status`,
-    [email.toLowerCase(), passwordHash]
+    `INSERT INTO users (email, password_hash, full_name, phone) VALUES ($1, $2, $3, $4) RETURNING id, email, full_name, phone, plan_tier, plan_status`,
+    [email.toLowerCase(), passwordHash, fullName.trim(), phone ? phone.trim() : null]
   );
 
   const user = result.rows[0];
@@ -55,13 +58,13 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = signToken(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email, plan_tier: user.plan_tier, plan_status: user.plan_status, trial_expires_at: user.trial_expires_at },
+    user: { id: user.id, email: user.email, full_name: user.full_name, phone: user.phone, plan_tier: user.plan_tier, plan_status: user.plan_status, trial_expires_at: user.trial_expires_at },
   });
 }));
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const result = await db.query(
-    'SELECT id, email, plan_tier, plan_status, trial_expires_at, created_at FROM users WHERE id = $1',
+    'SELECT id, email, full_name, phone, plan_tier, plan_status, trial_expires_at, created_at FROM users WHERE id = $1',
     [req.userId]
   );
   if (result.rows.length === 0) {

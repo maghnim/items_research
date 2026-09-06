@@ -4,13 +4,16 @@ CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
+  full_name TEXT,
+  phone TEXT, -- optional
   stripe_customer_id TEXT,
   stripe_subscription_id TEXT,
   paypal_subscription_id TEXT,
   plan_tier TEXT NOT NULL DEFAULT 'trial', -- trial | standard | premium | premiumplus | vip
   plan_duration_months INTEGER, -- billing term chosen at checkout: 1 | 3 | 6 | 12
   plan_status TEXT NOT NULL DEFAULT 'pending_payment', -- pending_payment | active | past_due | canceled
-  trial_expires_at TIMESTAMPTZ, -- set on the one-time EUR 2.99 trial payment: now() + 14 days
+  trial_expires_at TIMESTAMPTZ, -- set on the one-time trial payment: now() + trial_type's duration
+  trial_type TEXT, -- which trial was purchased: 24h | 7d
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -64,6 +67,9 @@ CREATE TABLE IF NOT EXISTS scrape_jobs (
 ALTER TABLE tracked_products ADD COLUMN IF NOT EXISTS last_currency TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_duration_months INTEGER;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS trial_type TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ALTER COLUMN plan_status SET DEFAULT 'pending_payment';
 
 CREATE INDEX IF NOT EXISTS idx_products_user ON tracked_products(user_id);

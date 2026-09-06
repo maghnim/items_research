@@ -20,11 +20,15 @@
 <div class="auth-wrap">
   <div class="auth-card">
     <h1 data-i18n="signup.title">Start your trial</h1>
-    <p class="sub" data-i18n="signup.subtitle">14-day trial, unlocked with a one-time payment of €2.99. No auto-renewal.</p>
+    <p class="sub" data-i18n="signup.subtitle">Choose a 24-hour or 7-day trial to get started. No auto-renewal.</p>
 
     <div class="form-msg" id="form-msg"></div>
 
     <form id="signup-form">
+      <div class="field">
+        <label for="fullname" data-i18n="signup.fullname.label">Full name</label>
+        <input type="text" id="fullname" required autocomplete="name" placeholder="Jane Doe" />
+      </div>
       <div class="field">
         <label for="email" data-i18n="signup.email.label">Work email</label>
         <input type="email" id="email" required autocomplete="email" placeholder="you@company.com" />
@@ -32,6 +36,14 @@
       <div class="field">
         <label for="password" data-i18n="signup.password.label">Password</label>
         <input type="password" id="password" required minlength="8" autocomplete="new-password" placeholder="At least 8 characters" />
+      </div>
+      <div class="field">
+        <label for="confirm-password" data-i18n="signup.confirmpassword.label">Confirm password</label>
+        <input type="password" id="confirm-password" required minlength="8" autocomplete="new-password" placeholder="Re-enter your password" />
+      </div>
+      <div class="field">
+        <label for="phone" data-i18n="signup.phone.label">Phone (optional)</label>
+        <input type="tel" id="phone" autocomplete="tel" placeholder="+1 555 000 0000" />
       </div>
       <button type="submit" class="btn btn-primary btn-block" data-i18n="signup.submit">Create account</button>
     </form>

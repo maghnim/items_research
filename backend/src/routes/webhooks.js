@@ -1,7 +1,7 @@
 const express = require('express');
 const Stripe = require('stripe');
 const db = require('../db');
-const { CATEGORIES, DURATIONS, envKey, TRIAL_DURATION_DAYS } = require('../utils/pricing');
+const { CATEGORIES, DURATIONS, envKey, isValidTrialType, trialDurationMs } = require('../utils/pricing');
 const { verifyWebhookSignature } = require('../services/paypal');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
@@ -36,11 +36,16 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         const type = session.metadata?.type;
 
         if (userId && type === 'trial') {
-          const trialExpiresAt = new Date(Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
-          await db.query(
-            `UPDATE users SET plan_status = 'active', trial_expires_at = $1 WHERE id = $2`,
-            [trialExpiresAt, userId]
-          );
+          const trialType = session.metadata?.trialType;
+          if (isValidTrialType(trialType)) {
+            const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
+            await db.query(
+              `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
+              [trialExpiresAt, trialType, userId]
+            );
+          } else {
+            console.error('[webhooks/stripe] trial checkout completed with unknown trialType:', trialType);
+          }
         } else if (userId && session.metadata?.category) {
           const subscriptionId = session.subscription;
           const category = session.metadata.category;

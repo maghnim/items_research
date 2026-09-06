@@ -4,7 +4,7 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/asyncHandler');
 const { getSubscription, createOrder, captureOrder } = require('../services/paypal');
-const { isValidCombo, envKey, TRIAL_PRICE_EUR, TRIAL_DURATION_DAYS } = require('../utils/pricing');
+const { isValidCombo, envKey, TRIALS, isValidTrialType, trialDurationMs, trialEnvKey } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -25,10 +25,16 @@ function paypalPlanId(category, months) {
 // display-only estimate, disclosed as such; the actual charge is EUR, same as any
 // international customer paying a European merchant.
 
-// One-time EUR 2.99 charge that unlocks 14 days of trial-tier access. Not a
-// subscription — mode: 'payment', no recurring billing until the user picks a real plan.
+// One-time charge that unlocks a fixed window of trial-tier access. Two options
+// (24h / 7d, see utils/pricing.js). Not a subscription — mode: 'payment', no
+// recurring billing until the user picks a real plan.
 router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, res) => {
-  const priceId = process.env.STRIPE_PRICE_TRIAL;
+  const { trialType } = req.body;
+  if (!isValidTrialType(trialType)) {
+    return res.status(400).json({ error: 'Unknown trial type.' });
+  }
+
+  const priceId = process.env[trialEnvKey('STRIPE_PRICE', trialType)];
   if (!priceId) {
     return res.status(400).json({ error: 'Trial payment is not configured yet.' });
   }
@@ -49,7 +55,7 @@ router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, re
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.APP_URL}/dashboard.html?checkout=trial-success`,
     cancel_url: `${process.env.APP_URL}/signup.html?checkout=cancelled`,
-    metadata: { userId: user.id, type: 'trial' },
+    metadata: { userId: user.id, type: 'trial', trialType },
   });
 
   res.json({ url: session.url });
@@ -138,16 +144,20 @@ router.post('/paypal/confirm', asyncHandler(async (req, res) => {
   res.json({ ok: true });
 }));
 
-// One-time EUR 2.99 trial unlock via PayPal Orders API (not a Billing Plan/Subscription).
+// One-time trial unlock via PayPal Orders API (not a Billing Plan/Subscription).
 router.post('/paypal/create-trial-order', asyncHandler(async (req, res) => {
-  const order = await createOrder(TRIAL_PRICE_EUR, 'EUR');
+  const { trialType } = req.body;
+  if (!isValidTrialType(trialType)) {
+    return res.status(400).json({ error: 'Unknown trial type.' });
+  }
+  const order = await createOrder(TRIALS[trialType].priceEur, 'EUR');
   res.json({ orderId: order.id });
 }));
 
 router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
-  const { orderId } = req.body;
-  if (!orderId) {
-    return res.status(400).json({ error: 'orderId is required.' });
+  const { orderId, trialType } = req.body;
+  if (!orderId || !isValidTrialType(trialType)) {
+    return res.status(400).json({ error: 'orderId and a valid trialType are required.' });
   }
 
   const capture = await captureOrder(orderId);
@@ -155,10 +165,18 @@ router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: `Payment not completed (status: ${capture.status}).` });
   }
 
-  const trialExpiresAt = new Date(Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+  // Don't trust the client's trialType blindly — confirm the amount actually captured
+  // by PayPal matches what that trial type costs before granting its duration.
+  const captured = capture.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
+  const expected = TRIALS[trialType];
+  if (!captured || captured.currency_code !== 'EUR' || Number(captured.value) !== expected.priceEur) {
+    return res.status(400).json({ error: 'Captured amount does not match the requested trial type.' });
+  }
+
+  const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
   await db.query(
-    `UPDATE users SET plan_status = 'active', trial_expires_at = $1 WHERE id = $2`,
-    [trialExpiresAt, req.userId]
+    `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
+    [trialExpiresAt, trialType, req.userId]
   );
 
   res.json({ ok: true });

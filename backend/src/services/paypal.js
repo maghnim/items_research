@@ -22,8 +22,8 @@ async function getSubscription(subscriptionId) {
   return response.data;
 }
 
-// One-time payment (PayPal Orders API v2) — used for the EUR 2.99 trial unlock, which
-// isn't a recurring subscription.
+// One-time payment (PayPal Orders API v2) — used for the trial unlock (EUR 1 / 24h or
+// EUR 3.99 / 7d), which isn't a recurring subscription.
 async function createOrder(amount, currency) {
   const token = await getAccessToken();
   const response = await axios.post(

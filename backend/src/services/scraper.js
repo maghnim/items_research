@@ -104,6 +104,57 @@ function extractWithCheerio(html, product) {
   return { price: null, platform, selectorUsed: null, currency: null };
 }
 
+// Respects robots.txt like a well-behaved crawler: fetched once per host and cached
+// briefly, since re-fetching it on every single product check would be wasteful.
+const robotsCache = new Map(); // host -> { disallowed: string[], expiresAt: number }
+const ROBOTS_CACHE_MS = 60 * 60 * 1000;
+
+function parseDisallowRules(robotsTxt) {
+  const lines = robotsTxt.split('\n').map((l) => l.trim());
+  const disallowed = [];
+  let inWildcardGroup = false;
+
+  for (const line of lines) {
+    const [rawKey, ...rest] = line.split(':');
+    if (!rawKey || rest.length === 0) continue;
+    const key = rawKey.trim().toLowerCase();
+    const value = rest.join(':').trim();
+
+    if (key === 'user-agent') {
+      inWildcardGroup = value === '*';
+    } else if (inWildcardGroup && key === 'disallow' && value) {
+      disallowed.push(value);
+    }
+  }
+  return disallowed;
+}
+
+async function isAllowedByRobots(url) {
+  let host;
+  try {
+    host = new URL(url).origin;
+  } catch (_) {
+    return true; // malformed URL — let the actual fetch fail and report that instead.
+  }
+
+  const cached = robotsCache.get(host);
+  let disallowed;
+  if (cached && cached.expiresAt > Date.now()) {
+    disallowed = cached.disallowed;
+  } else {
+    try {
+      const res = await axios.get(`${host}/robots.txt`, { timeout: 8000, validateStatus: () => true });
+      disallowed = res.status === 200 ? parseDisallowRules(res.data) : [];
+    } catch (_) {
+      disallowed = []; // no robots.txt / unreachable — default to allowed, per convention.
+    }
+    robotsCache.set(host, { disallowed, expiresAt: Date.now() + ROBOTS_CACHE_MS });
+  }
+
+  const path = new URL(url).pathname;
+  return !disallowed.some((rule) => path.startsWith(rule));
+}
+
 async function fetchStaticHtml(url) {
   const response = await axios.get(url, {
     headers: {
@@ -129,6 +180,10 @@ async function fetchRenderedHtml(url) {
 }
 
 async function scrapeProduct(product) {
+  if (!(await isAllowedByRobots(product.url))) {
+    return { success: false, error: 'Blocked by the site\'s robots.txt — this page is not checked.' };
+  }
+
   let html;
   try {
     html = await fetchStaticHtml(product.url);

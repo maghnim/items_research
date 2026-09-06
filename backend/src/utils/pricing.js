@@ -5,10 +5,13 @@
 const CATEGORIES = ['standard', 'premium', 'premiumplus', 'vip'];
 const DURATIONS = [1, 3, 6, 12];
 
-// The trial itself is a paid, one-time unlock (not a subscription): pay once, get 14
-// days of trial-tier access. STRIPE_PRICE_TRIAL is a one-time (non-recurring) Price.
-const TRIAL_PRICE_EUR = 2.99;
-const TRIAL_DURATION_DAYS = 14;
+// The trial itself is a paid, one-time unlock (not a subscription): pay once, get
+// trial-tier access for a fixed window. Two options, each a one-time (non-recurring)
+// Price — STRIPE_PRICE_TRIAL_24H / STRIPE_PRICE_TRIAL_7D.
+const TRIALS = {
+  '24h': { priceEur: 1.00, durationHours: 24 },
+  '7d': { priceEur: 3.99, durationHours: 24 * 7 },
+};
 
 const PRICES_EUR = {
   standard: { 1: 9.99, 3: 19.99, 6: 29.99, 12: 45.99 },
@@ -27,6 +30,20 @@ const CATEGORY_LIMITS = {
 
 function isValidCombo(category, months) {
   return CATEGORIES.indexOf(category) !== -1 && Object.prototype.hasOwnProperty.call(PRICES_EUR[category] || {}, months);
+}
+
+function isValidTrialType(type) {
+  return Object.prototype.hasOwnProperty.call(TRIALS, type);
+}
+
+function trialDurationMs(type) {
+  const trial = TRIALS[type];
+  return trial ? trial.durationHours * 60 * 60 * 1000 : null;
+}
+
+// e.g. trialEnvKey('STRIPE_PRICE', '24h') -> 'STRIPE_PRICE_TRIAL_24H'
+function trialEnvKey(prefix, type) {
+  return `${prefix}_TRIAL_${type.toUpperCase()}`;
 }
 
 function priceFor(category, months) {
@@ -49,10 +66,12 @@ module.exports = {
   DURATIONS,
   PRICES_EUR,
   CATEGORY_LIMITS,
-  TRIAL_PRICE_EUR,
-  TRIAL_DURATION_DAYS,
+  TRIALS,
   isValidCombo,
+  isValidTrialType,
+  trialDurationMs,
   priceFor,
   getCategoryLimits,
   envKey,
+  trialEnvKey,
 };
