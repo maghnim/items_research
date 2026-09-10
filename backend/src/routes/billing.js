@@ -4,7 +4,7 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/asyncHandler');
 const { getSubscription, createOrder, captureOrder } = require('../services/paypal');
-const { createDynamicCheckout } = require('../services/polar');
+const { polar, createDynamicCheckout } = require('../services/polar');
 const { isValidCombo, envKey, TRIALS, isValidTrialType, trialDurationMs, trialEnvKey, priceFor } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
@@ -207,7 +207,7 @@ router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res
   const checkout = await createDynamicCheckout({
     productId,
     amountEur: TRIALS[trialType].priceEur,
-    successUrl: `${process.env.APP_URL}/dashboard.html?checkout=trial-success`,
+    successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail: user.email,
     metadata: { userId: user.id, type: 'trial', trialType },
   });
@@ -232,12 +232,39 @@ router.post('/polar/create-checkout-session', asyncHandler(async (req, res) => {
   const checkout = await createDynamicCheckout({
     productId,
     amountEur: priceFor(category, Number(months)),
-    successUrl: `${process.env.APP_URL}/dashboard.html?checkout=success`,
+    successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail: user.email,
     metadata: { userId: user.id, type: 'plan', category, months: String(months) },
   });
 
   res.json({ url: checkout.url });
+}));
+
+// Fetched by payment-success.html after Polar redirects back with ?checkout_id={CHECKOUT_ID}.
+// Reads straight from Polar (not our DB) since the webhook may not have processed yet —
+// the checkout object itself already reflects the final payment status immediately.
+router.get('/polar/checkout/:checkoutId', asyncHandler(async (req, res) => {
+  let checkout;
+  try {
+    checkout = await polar.checkouts.get({ id: req.params.checkoutId });
+  } catch (err) {
+    return res.status(404).json({ error: 'Checkout not found.' });
+  }
+
+  if (checkout.metadata?.userId !== req.userId) {
+    return res.status(403).json({ error: 'Not authorized to view this checkout.' });
+  }
+
+  res.json({
+    status: checkout.status,
+    amount: checkout.totalAmount / 100,
+    currency: checkout.currency,
+    customerName: checkout.customerName,
+    customerEmail: checkout.customerEmail,
+    productName: checkout.product?.name || null,
+    metadata: checkout.metadata,
+    createdAt: checkout.createdAt,
+  });
 }));
 
 module.exports = router;

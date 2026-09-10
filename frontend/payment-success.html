@@ -1,0 +1,68 @@
+<title data-i18n="meta.paymentsuccess.title">Payment Successful — Pricera</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="css/style.css" />
+
+<header class="site-header">
+  <div class="container">
+    <a href="index.html" class="logo"><span class="logo-mark">P</span> Pricera</a>
+    <nav class="main-nav">
+      <a href="index.html#features" data-i18n="nav.features">Features</a>
+      <a href="pricing.html" data-i18n="nav.pricing">Pricing</a>
+      <a href="about.html" data-i18n="nav.about">About</a>
+    </nav>
+    <div class="header-actions">
+      <div class="lang-switch">
+        <button data-lang-switch="en">EN</button>
+        <button data-lang-switch="fr">FR</button>
+      </div>
+      <a href="dashboard.html" class="btn btn-outline" data-i18n="nav.dashboard">Dashboard</a>
+    </div>
+  </div>
+</header>
+
+<div class="container" style="max-width:560px; padding-top:60px; padding-bottom:100px;">
+  <div id="payment-loading" style="text-align:center; padding:40px 0;">
+    <p data-i18n="payment.success.loading">Confirming your payment…</p>
+  </div>
+
+  <div id="payment-error" class="card" style="display:none; text-align:center;">
+    <h1 style="font-size:22px; margin-bottom:8px;" data-i18n="payment.error.title">We couldn't confirm this payment</h1>
+    <p style="color:var(--slate-500); margin-bottom:24px;" data-i18n="payment.error.body">If you completed checkout, your account should update shortly. Otherwise, please contact support.</p>
+    <a href="dashboard.html" class="btn btn-primary" data-i18n="payment.success.cta">Go to dashboard</a>
+  </div>
+
+  <div id="payment-success" class="card" style="display:none;">
+    <div style="text-align:center; margin-bottom:28px;">
+      <div style="width:56px; height:56px; border-radius:50%; background:var(--success); color:white; font-size:28px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">✓</div>
+      <h1 style="font-size:24px; margin:0 0 6px;" data-i18n="payment.success.title">Thank you!</h1>
+      <p style="color:var(--slate-500); margin:0;" data-i18n="payment.success.subtitle">Your payment was completed successfully.</p>
+    </div>
+
+    <table style="width:100%; border-collapse:collapse; font-size:14.5px;">
+      <tbody id="payment-details"></tbody>
+    </table>
+
+    <div style="text-align:center; margin-top:28px;">
+      <a href="dashboard.html" class="btn btn-primary" data-i18n="payment.success.cta">Go to dashboard</a>
+    </div>
+  </div>
+</div>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <p data-i18n="footer.copyright">© 2026 Pricera. All rights reserved.</p>
+      <div class="footer-links">
+        <a href="privacy-policy.html" data-i18n="footer.bottom.privacy">Privacy</a>
+        <a href="terms-of-service.html" data-i18n="footer.bottom.terms">Terms</a>
+        <a href="refund-policy.html" data-i18n="footer.bottom.refunds">Refunds</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="js/translations.js"></script>
+<script src="js/i18n.js"></script>
+<script src="js/api.js"></script>
+<script src="js/payment-success.js"></script>
