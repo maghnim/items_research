@@ -61,7 +61,7 @@ router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (
     metadata,
   });
 
-  res.json({ url: checkout.url });
+  res.json({ url: checkout.url, debugId: checkout.id }); // TEMP debug field, will revert
 }));
 
 // Fetched by payment-success.html after Polar redirects back with ?checkout_id={CHECKOUT_ID}.
