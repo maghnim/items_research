@@ -16,8 +16,6 @@ async function checkPaymentStatus() {
     const bodyEl = document.getElementById('paywall-body');
     const ctaEl = document.getElementById('paywall-cta');
     const cta2El = document.getElementById('paywall-cta-2');
-    const polarCta24hEl = document.getElementById('paywall-cta-polar-24h');
-    const polarCta7dEl = document.getElementById('paywall-cta-polar-7d');
     const addBtn = document.getElementById('open-add-modal');
 
     const trialExpired = fresh.plan_tier === 'trial' && fresh.trial_expires_at && new Date(fresh.trial_expires_at) < new Date();
@@ -27,16 +25,10 @@ async function checkPaymentStatus() {
       titleEl.textContent = t('dashboard.paywall.pending.title');
       bodyEl.textContent = t('dashboard.paywall.pending.body');
       ctaEl.textContent = t('dashboard.paywall.pending.cta24h');
-      ctaEl.onclick = () => startTrialCheckout('24h');
+      ctaEl.onclick = () => startPolarTrialCheckout('24h');
       cta2El.textContent = t('dashboard.paywall.pending.cta7d');
-      cta2El.onclick = () => startTrialCheckout('7d');
+      cta2El.onclick = () => startPolarTrialCheckout('7d');
       cta2El.style.display = 'inline-block';
-      polarCta24hEl.textContent = t('dashboard.paywall.pending.cta24h.polar');
-      polarCta24hEl.onclick = () => startPolarTrialCheckout('24h');
-      polarCta24hEl.style.display = 'inline-block';
-      polarCta7dEl.textContent = t('dashboard.paywall.pending.cta7d.polar');
-      polarCta7dEl.onclick = () => startPolarTrialCheckout('7d');
-      polarCta7dEl.style.display = 'inline-block';
       banner.style.display = 'flex';
       if (addBtn) addBtn.disabled = true;
     } else if (trialExpired || planExpired) {
@@ -45,8 +37,6 @@ async function checkPaymentStatus() {
       ctaEl.textContent = t('dashboard.paywall.expired.cta');
       ctaEl.onclick = () => { window.location.href = 'pricing.html'; };
       cta2El.style.display = 'none';
-      polarCta24hEl.style.display = 'none';
-      polarCta7dEl.style.display = 'none';
       banner.style.display = 'flex';
       if (addBtn) addBtn.disabled = true;
     }
