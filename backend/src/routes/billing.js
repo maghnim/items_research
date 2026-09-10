@@ -61,7 +61,7 @@ router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (
     metadata,
   });
 
-  res.json({ url: checkout.url, debugId: checkout.id }); // TEMP debug field, will revert
+  res.json({ url: checkout.url });
 }));
 
 // Fetched by payment-success.html after Polar redirects back with ?checkout_id={CHECKOUT_ID}.
@@ -72,9 +72,8 @@ router.get('/polar/checkout/:checkoutId', optionalAuth, asyncHandler(async (req,
   try {
     checkout = await polar.checkouts.get({ id: req.params.checkoutId });
   } catch (err) {
-    console.error('[billing/polar/checkout] get failed:', err.message, err.statusCode, err.body);
-    // TEMPORARY: surfacing the real error to diagnose a live 404 mystery — revert before merging to main long-term.
-    return res.status(404).json({ error: 'Checkout not found.', debug: { message: err.message, statusCode: err.statusCode, body: err.body } });
+    console.error('[billing/polar/checkout] get failed:', err.message);
+    return res.status(404).json({ error: 'Checkout not found.' });
   }
 
   const isGuestCheckout = checkout.metadata?.guest === 'true';
