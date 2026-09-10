@@ -4,7 +4,8 @@ const db = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/asyncHandler');
 const { getSubscription, createOrder, captureOrder } = require('../services/paypal');
-const { isValidCombo, envKey, TRIALS, isValidTrialType, trialDurationMs, trialEnvKey } = require('../utils/pricing');
+const { createDynamicCheckout } = require('../services/polar');
+const { isValidCombo, envKey, TRIALS, isValidTrialType, trialDurationMs, trialEnvKey, priceFor } = require('../utils/pricing');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -180,6 +181,63 @@ router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
   );
 
   res.json({ ok: true });
+}));
+
+// --- Polar ---
+// Polar has no Stripe-style "bill every N months" recurring interval, so every Polar
+// checkout here (trial and paid plans alike) is a one-time payment for an amount read
+// straight from utils/pricing.js and handed to Polar per-checkout — see services/polar.js.
+// Two generic one-time Products (POLAR_PRODUCT_TRIAL / POLAR_PRODUCT_PLAN) cover all combos;
+// the actual category/months/trialType lives only in checkout metadata.
+
+router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res) => {
+  const { trialType } = req.body;
+  if (!isValidTrialType(trialType)) {
+    return res.status(400).json({ error: 'Unknown trial type.' });
+  }
+
+  const productId = process.env.POLAR_PRODUCT_TRIAL;
+  if (!productId) {
+    return res.status(400).json({ error: 'Trial payment is not configured yet.' });
+  }
+
+  const userResult = await db.query('SELECT * FROM users WHERE id = $1', [req.userId]);
+  const user = userResult.rows[0];
+
+  const checkout = await createDynamicCheckout({
+    productId,
+    amountEur: TRIALS[trialType].priceEur,
+    successUrl: `${process.env.APP_URL}/dashboard.html?checkout=trial-success`,
+    customerEmail: user.email,
+    metadata: { userId: user.id, type: 'trial', trialType },
+  });
+
+  res.json({ url: checkout.url });
+}));
+
+router.post('/polar/create-checkout-session', asyncHandler(async (req, res) => {
+  const { category, months } = req.body;
+  if (!isValidCombo(category, Number(months))) {
+    return res.status(400).json({ error: 'Unknown plan category or billing term.' });
+  }
+
+  const productId = process.env.POLAR_PRODUCT_PLAN;
+  if (!productId) {
+    return res.status(400).json({ error: 'Polar payment is not configured yet.' });
+  }
+
+  const userResult = await db.query('SELECT * FROM users WHERE id = $1', [req.userId]);
+  const user = userResult.rows[0];
+
+  const checkout = await createDynamicCheckout({
+    productId,
+    amountEur: priceFor(category, Number(months)),
+    successUrl: `${process.env.APP_URL}/dashboard.html?checkout=success`,
+    customerEmail: user.email,
+    metadata: { userId: user.id, type: 'plan', category, months: String(months) },
+  });
+
+  res.json({ url: checkout.url });
 }));
 
 module.exports = router;

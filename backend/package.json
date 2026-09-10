@@ -12,6 +12,7 @@
     "migrate": "node src/db/migrate.js"
   },
   "dependencies": {
+    "@polar-sh/sdk": "^0.49.0",
     "axios": "^1.7.7",
     "bcrypt": "^5.1.1",
     "cheerio": "^1.0.0",

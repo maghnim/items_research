@@ -52,7 +52,10 @@ function renderPricingTable() {
         <td class="price-cell">${formatMoney(displayTotal, currency)}</td>
         <td>${formatMoney(perMonth, currency)} <span class="permonth-suffix">${t('common.perMonth')}</span></td>
         <td>${savingsPct > 0 ? `<span class="savings-pill">-${savingsPct}%</span>` : '—'}</td>
-        <td><button class="btn btn-primary btn-sm" onclick="startStripeCheckout('${activeCategory}', ${months})">${t('pricing.table.action')}</button></td>
+        <td>
+          <button class="btn btn-primary btn-sm" onclick="startStripeCheckout('${activeCategory}', ${months})">${t('pricing.table.action')}</button>
+          <button class="btn btn-outline btn-sm" onclick="startPolarCheckout('${activeCategory}', ${months})">${t('pricing.table.action.polar')}</button>
+        </td>
       </tr>
     `;
   }).join('');

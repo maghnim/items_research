@@ -64,7 +64,7 @@ router.post('/login', asyncHandler(async (req, res) => {
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const result = await db.query(
-    'SELECT id, email, full_name, phone, plan_tier, plan_status, trial_expires_at, created_at FROM users WHERE id = $1',
+    'SELECT id, email, full_name, phone, plan_tier, plan_status, trial_expires_at, plan_expires_at, created_at FROM users WHERE id = $1',
     [req.userId]
   );
   if (result.rows.length === 0) {

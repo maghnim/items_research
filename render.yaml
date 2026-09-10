@@ -118,8 +118,18 @@ services:
         sync: false
       - key: PAYPAL_PLAN_VIP_12
         sync: false
-      # Polar.sh organization access token (scope: checkouts:write).
+      # Polar.sh: one-time payments only (no Stripe-style multi-month recurring interval),
+      # amount is read from utils/pricing.js and overridden per-checkout, so only 2 generic
+      # one-time Products are needed instead of 18 pre-configured combos.
       - key: POLAR_ACCESS_TOKEN
+        sync: false
+      - key: POLAR_WEBHOOK_SECRET
+        sync: false
+      - key: POLAR_MODE
+        value: sandbox
+      - key: POLAR_PRODUCT_TRIAL
+        sync: false
+      - key: POLAR_PRODUCT_PLAN
         sync: false
 
   # Frontend — static site, always free on Render.

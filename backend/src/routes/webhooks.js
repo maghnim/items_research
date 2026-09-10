@@ -3,6 +3,7 @@ const Stripe = require('stripe');
 const db = require('../db');
 const { CATEGORIES, DURATIONS, envKey, isValidTrialType, trialDurationMs } = require('../utils/pricing');
 const { verifyWebhookSignature } = require('../services/paypal');
+const { validateEvent, WebhookVerificationError } = require('@polar-sh/sdk/webhooks');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 
@@ -123,6 +124,63 @@ router.post('/paypal', express.json(), async (req, res) => {
     res.json({ received: true });
   } catch (err) {
     console.error('[webhooks/paypal] handler error:', err.message);
+    res.status(500).json({ error: 'Webhook handler failed.' });
+  }
+});
+
+// Polar sends events for one-time orders (Pricera uses Polar exclusively for one-time
+// payments — no Stripe-style multi-month recurring interval exists on Polar's side, see
+// services/polar.js). `order.paid` fires once payment is fully processed; metadata set on
+// the checkout is copied onto the resulting Order, so we don't need a reverse-lookup table.
+router.post('/polar', express.raw({ type: 'application/json' }), async (req, res) => {
+  let event;
+  try {
+    event = validateEvent(req.body, req.headers, process.env.POLAR_WEBHOOK_SECRET);
+  } catch (err) {
+    if (err instanceof WebhookVerificationError) {
+      console.error('[webhooks/polar] signature verification failed:', err.message);
+      return res.status(403).send('Webhook Error: invalid signature');
+    }
+    console.error('[webhooks/polar] unexpected verification error:', err.message);
+    return res.status(400).send('Webhook Error');
+  }
+
+  try {
+    if (event.type === 'order.paid') {
+      const order = event.data;
+      const metadata = order.metadata || {};
+      const userId = metadata.userId;
+
+      if (userId && metadata.type === 'trial') {
+        const trialType = metadata.trialType;
+        if (isValidTrialType(trialType)) {
+          const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
+          await db.query(
+            `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
+            [trialExpiresAt, trialType, userId]
+          );
+        } else {
+          console.error('[webhooks/polar] trial order paid with unknown trialType:', trialType);
+        }
+      } else if (userId && metadata.type === 'plan') {
+        const { category, months } = metadata;
+        await db.query(
+          `UPDATE users
+           SET plan_tier = $1,
+               plan_duration_months = $2,
+               plan_status = 'active',
+               plan_expires_at = now() + ($2 || ' months')::interval,
+               polar_customer_id = $3
+           WHERE id = $4`,
+          [category, months, order.customerId, userId]
+        );
+      } else {
+        console.error('[webhooks/polar] order.paid with unrecognized metadata:', JSON.stringify(metadata));
+      }
+    }
+    res.json({ received: true });
+  } catch (err) {
+    console.error('[webhooks/polar] handler error:', err.message);
     res.status(500).json({ error: 'Webhook handler failed.' });
   }
 });

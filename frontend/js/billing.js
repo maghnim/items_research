@@ -20,6 +20,28 @@ async function startTrialCheckout(trialType) {
   }
 }
 
+async function startPolarCheckout(category, months) {
+  if (!getToken()) {
+    window.location.href = `signup.html?plan=${category}&months=${months}`;
+    return;
+  }
+  try {
+    const { url } = await api('/billing/polar/create-checkout-session', { method: 'POST', body: { category, months } });
+    window.location.href = url;
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+async function startPolarTrialCheckout(trialType) {
+  try {
+    const { url } = await api('/billing/polar/create-trial-checkout-session', { method: 'POST', body: { trialType } });
+    window.location.href = url;
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
 async function openBillingPortal() {
   try {
     const { url } = await api('/billing/stripe/portal');

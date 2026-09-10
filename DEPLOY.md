@@ -76,7 +76,17 @@ If Render assigns different subdomains (names can be taken), update:
 5. Under **Billing Plans**, create a Product + 16 monthly Plans matching the 4 categories × 4 billing terms above. Copy each Plan ID into the matching `PAYPAL_PLAN_<CATEGORY>_<MONTHS>` env var (see `backend/.env.example`).
 6. Sandbox test buyer accounts are auto-generated under **Sandbox → Accounts** — use one of those to test the trial unlock and a subscription end-to-end.
 
-## 7. Smoke test
+## 7. Polar.sh (Merchant-of-Record, sandbox mode)
+
+Polar has no Stripe-style "bill every N months" recurring interval, so Pricera uses Polar exclusively for one-time payments (trial unlock and paid plans alike) — the amount is read from `backend/src/utils/pricing.js` and overridden per-checkout, so only 2 generic Products are needed instead of 18 pre-configured combos.
+
+1. Sign up free at https://polar.sh and create an organization (this is the account that was reviewed/approved under Polar's Acceptable Use Policy).
+2. In the Sandbox environment (toggle in the dashboard), **Products → New Product**, create two one-time products: "Trial unlock" and "Plan purchase". Their own default price barely matters since the actual charge is overridden per-checkout — set any placeholder fixed price. Copy each product's ID into `POLAR_PRODUCT_TRIAL` / `POLAR_PRODUCT_PLAN`.
+3. **Settings → Developers**, create an organization access token (scope: `checkouts:write`) → `POLAR_ACCESS_TOKEN`. Leave `POLAR_MODE=sandbox` until you're ready to go live with a production org token.
+4. **Settings → Webhooks → Add Endpoint**, URL = `https://pricepilot-api-cfl6.onrender.com/api/webhooks/polar`, subscribe to `order.paid`. Copy the signing secret into `POLAR_WEBHOOK_SECRET`.
+5. Test checkout with Polar's sandbox test card: `4242 4242 4242 4242`, any future expiry, any CVC.
+
+## 8. Smoke test
 
 1. Visit `https://pricepilot-app.onrender.com`, sign up for a trial account.
 2. Add a competitor product URL from the dashboard.
