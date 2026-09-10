@@ -1,5 +1,7 @@
 const express = require('express');
 const Stripe = require('stripe');
+const bcrypt = require('bcrypt');
+const crypto = require('crypto');
 const db = require('../db');
 const { CATEGORIES, DURATIONS, envKey, isValidTrialType, trialDurationMs } = require('../utils/pricing');
 const { verifyWebhookSignature } = require('../services/paypal');
@@ -174,6 +176,45 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
            WHERE id = $4`,
           [category, months, order.customerId, userId]
         );
+      } else if (metadata.type === 'plan' && metadata.guest === 'true') {
+        // Guest checkout (pricing.html, no account required first) — see routes/billing.js.
+        const { category, months } = metadata;
+        const email = (order.customerEmail || '').toLowerCase();
+        if (!email) {
+          console.error('[webhooks/polar] guest plan order.paid with no customer email');
+        } else {
+          const existing = await db.query('SELECT id FROM users WHERE email = $1', [email]);
+          if (existing.rows.length > 0) {
+            // Someone paid as a guest despite already having an account — just update it,
+            // same as the authenticated branch above. Leaves password_needs_setup untouched.
+            await db.query(
+              `UPDATE users
+               SET plan_tier = $1,
+                   plan_duration_months = $2,
+                   plan_status = 'active',
+                   plan_expires_at = now() + ($2 || ' months')::interval,
+                   polar_customer_id = $3
+               WHERE id = $4`,
+              [category, months, order.customerId, existing.rows[0].id]
+            );
+          } else {
+            // Auto-create the account. password_hash is a random value nobody is ever told —
+            // the buyer sets a real password via POST /billing/polar/claim-account
+            // (routes/billing.js), gated by password_needs_setup.
+            const randomPassword = crypto.randomBytes(32).toString('hex');
+            const passwordHash = await bcrypt.hash(randomPassword, 12);
+            const fullName = order.customerName || order.customerBillingName || null;
+            const phone = order.customFieldData?.phone || null;
+            await db.query(
+              `INSERT INTO users (
+                 email, password_hash, full_name, phone,
+                 plan_tier, plan_duration_months, plan_status, plan_expires_at,
+                 polar_customer_id, password_needs_setup
+               ) VALUES ($1, $2, $3, $4, $5, $6, 'active', now() + ($6 || ' months')::interval, $7, true)`,
+              [email, passwordHash, fullName, phone, category, months, order.customerId]
+            );
+          }
+        }
       } else {
         console.error('[webhooks/polar] order.paid with unrecognized metadata:', JSON.stringify(metadata));
       }

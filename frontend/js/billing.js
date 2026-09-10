@@ -21,10 +21,9 @@ async function startTrialCheckout(trialType) {
 }
 
 async function startPolarCheckout(category, months) {
-  if (!getToken()) {
-    window.location.href = `signup.html?plan=${category}&months=${months}`;
-    return;
-  }
+  // Unlike Stripe, Polar plan checkout doesn't require an account first — the backend
+  // (optionalAuth) treats a missing token as a guest checkout and auto-creates the
+  // account from the Polar order once payment succeeds (see routes/billing.js).
   try {
     const { url } = await api('/billing/polar/create-checkout-session', { method: 'POST', body: { category, months } });
     window.location.href = url;

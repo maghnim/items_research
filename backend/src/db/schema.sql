@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
   plan_expires_at TIMESTAMPTZ, -- Polar plans only: Polar has no auto-renewal, so expiry is tracked here
   trial_expires_at TIMESTAMPTZ, -- set on the one-time trial payment: now() + trial_type's duration
   trial_type TEXT, -- which trial was purchased: 24h | 7d
+  password_needs_setup BOOLEAN NOT NULL DEFAULT false, -- true for accounts auto-created from a guest Polar checkout, until they claim a real password
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
@@ -74,6 +75,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS polar_customer_id TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMPTZ;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS password_needs_setup BOOLEAN NOT NULL DEFAULT false;
 ALTER TABLE users ALTER COLUMN plan_status SET DEFAULT 'pending_payment';
 
 CREATE INDEX IF NOT EXISTS idx_products_user ON tracked_products(user_id);

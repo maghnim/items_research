@@ -74,3 +74,4 @@ router.get('/me', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 module.exports = router;
+module.exports.signToken = signToken;

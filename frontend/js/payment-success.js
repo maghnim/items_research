@@ -1,4 +1,5 @@
-requireAuthOrRedirect();
+// Not gated by requireAuthOrRedirect() — a guest who paid without an account first
+// legitimately has no token yet, and still needs to see this page to claim it.
 
 const CATEGORY_LABELS = {
   standard: 'Standard',
@@ -33,42 +34,99 @@ function addRow(tbody, label, value) {
   tbody.appendChild(tr);
 }
 
-async function loadPaymentDetails() {
-  const params = new URLSearchParams(window.location.search);
-  const checkoutId = params.get('checkout_id');
-  const loadingEl = document.getElementById('payment-loading');
-  const errorEl = document.getElementById('payment-error');
-  const successEl = document.getElementById('payment-success');
+function showReceipt(checkout) {
+  const tbody = document.getElementById('payment-details');
+  addRow(tbody, t('payment.success.item'), itemLabel(checkout.metadata || {}));
+  addRow(tbody, t('payment.success.amount'), formatMoney(checkout.amount, checkout.currency));
+  if (checkout.customerName) addRow(tbody, t('payment.success.buyer'), checkout.customerName);
+  addRow(tbody, t('payment.success.email'), checkout.customerEmail || '—');
+  addRow(tbody, t('payment.success.date'), new Date(checkout.createdAt).toLocaleString());
+  addRow(tbody, t('payment.success.reference'), checkoutIdFromUrl());
 
-  if (!checkoutId) {
-    loadingEl.style.display = 'none';
-    errorEl.style.display = 'block';
-    return;
-  }
+  document.getElementById('payment-loading').style.display = 'none';
+  document.getElementById('payment-success').style.display = 'block';
+}
 
-  try {
-    const checkout = await api(`/billing/polar/checkout/${checkoutId}`);
-    if (checkout.status !== 'succeeded') {
-      loadingEl.style.display = 'none';
-      errorEl.style.display = 'block';
+function showClaimForm(checkout, checkoutId) {
+  document.getElementById('claim-email').value = checkout.customerEmail || '';
+  document.getElementById('payment-loading').style.display = 'none';
+  document.getElementById('payment-claim').style.display = 'block';
+
+  const form = document.getElementById('claim-form');
+  const errorEl = document.getElementById('claim-error');
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    errorEl.textContent = '';
+
+    const password = document.getElementById('claim-password').value;
+    const confirm = document.getElementById('claim-password-confirm').value;
+    if (password.length < 8) {
+      errorEl.textContent = t('payment.claim.tooShort');
+      return;
+    }
+    if (password !== confirm) {
+      errorEl.textContent = t('payment.claim.mismatch');
       return;
     }
 
-    const tbody = document.getElementById('payment-details');
-    addRow(tbody, t('payment.success.item'), itemLabel(checkout.metadata || {}));
-    addRow(tbody, t('payment.success.amount'), formatMoney(checkout.amount, checkout.currency));
-    if (checkout.customerName) addRow(tbody, t('payment.success.buyer'), checkout.customerName);
-    addRow(tbody, t('payment.success.email'), checkout.customerEmail || '—');
-    addRow(tbody, t('payment.success.date'), new Date(checkout.createdAt).toLocaleString());
-    addRow(tbody, t('payment.success.reference'), checkoutId);
-
-    loadingEl.style.display = 'none';
-    successEl.style.display = 'block';
-  } catch (err) {
-    console.error('Failed to load payment details:', err.message);
-    loadingEl.style.display = 'none';
-    errorEl.style.display = 'block';
-  }
+    try {
+      const { token, user } = await api('/billing/polar/claim-account', {
+        method: 'POST',
+        body: { checkoutId, password },
+      });
+      setToken(token);
+      setUser(user);
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  });
 }
 
-loadPaymentDetails();
+function showError() {
+  document.getElementById('payment-loading').style.display = 'none';
+  document.getElementById('payment-error').style.display = 'block';
+}
+
+function checkoutIdFromUrl() {
+  return new URLSearchParams(window.location.search).get('checkout_id');
+}
+
+async function loadPaymentDetails(attempt) {
+  const checkoutId = checkoutIdFromUrl();
+  if (!checkoutId) {
+    showError();
+    return;
+  }
+
+  let checkout;
+  try {
+    checkout = await api(`/billing/polar/checkout/${checkoutId}`);
+  } catch (err) {
+    console.error('Failed to load payment details:', err.message);
+    showError();
+    return;
+  }
+
+  if (checkout.status !== 'succeeded') {
+    showError();
+    return;
+  }
+
+  if (checkout.needsPasswordSetup) {
+    showClaimForm(checkout, checkoutId);
+    return;
+  }
+
+  // Guest checkout, paid, but the account-creation webhook may not have landed yet —
+  // retry briefly rather than flashing the wrong state.
+  const isGuestCheckout = checkout.metadata?.guest === 'true';
+  if (isGuestCheckout && (attempt || 0) < 5) {
+    setTimeout(() => loadPaymentDetails((attempt || 0) + 1), 2000);
+    return;
+  }
+
+  showReceipt(checkout);
+}
+
+loadPaymentDetails(0);

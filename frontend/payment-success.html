@@ -29,6 +29,29 @@
       <a href="dashboard.html" class="btn btn-primary" data-i18n="payment.success.cta">Go to dashboard</a>
     </div>
   </div>
+
+  <div id="payment-claim" class="card" style="display:none;">
+    <div style="text-align:center; margin-bottom:24px;">
+      <div style="width:56px; height:56px; border-radius:50%; background:var(--success); color:white; font-size:28px; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">✓</div>
+      <h1 style="font-size:22px; margin:0 0 6px;" data-i18n="payment.claim.title">Payment received — set up your account</h1>
+      <p style="color:var(--slate-500); margin:0;" data-i18n="payment.claim.subtitle">One last step: choose a password to access your dashboard.</p>
+    </div>
+
+    <form id="claim-form">
+      <label style="display:block; font-size:13px; color:var(--slate-500); margin-bottom:4px;" data-i18n="payment.claim.emailLabel">Email</label>
+      <input type="email" id="claim-email" disabled style="width:100%; padding:10px 12px; border:1px solid var(--slate-200); border-radius:8px; margin-bottom:16px; background:var(--slate-50, #f8fafc); color:var(--navy-900);" />
+
+      <label style="display:block; font-size:13px; color:var(--slate-500); margin-bottom:4px;" data-i18n="payment.claim.passwordLabel">Password</label>
+      <input type="password" id="claim-password" required minlength="8" style="width:100%; padding:10px 12px; border:1px solid var(--slate-200); border-radius:8px; margin-bottom:16px;" />
+
+      <label style="display:block; font-size:13px; color:var(--slate-500); margin-bottom:4px;" data-i18n="payment.claim.confirmLabel">Confirm password</label>
+      <input type="password" id="claim-password-confirm" required minlength="8" style="width:100%; padding:10px 12px; border:1px solid var(--slate-200); border-radius:8px; margin-bottom:8px;" />
+
+      <p id="claim-error" style="color:var(--danger); font-size:13.5px; min-height:18px; margin:0 0 12px;"></p>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;" data-i18n="payment.claim.submit">Create my account</button>
+    </form>
+  </div>
 </div>
 
 <script src="js/translations.js"></script>
