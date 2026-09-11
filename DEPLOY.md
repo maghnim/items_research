@@ -82,9 +82,10 @@ Polar has no Stripe-style "bill every N months" recurring interval, so Pricera u
 
 1. Sign up free at https://polar.sh and create an organization (this is the account that was reviewed/approved under Polar's Acceptable Use Policy).
 2. In the Sandbox environment (toggle in the dashboard), **Products → New Product**, create two one-time products: "Trial unlock" and "Plan purchase". Their own default price barely matters since the actual charge is overridden per-checkout — set any placeholder fixed price. Copy each product's ID into `POLAR_PRODUCT_TRIAL` / `POLAR_PRODUCT_PLAN`.
-3. **Settings → Developers**, create an organization access token (scope: `checkouts:write`) → `POLAR_ACCESS_TOKEN`. Leave `POLAR_MODE=sandbox` until you're ready to go live with a production org token.
+3. **Settings → Developers**, create an organization access token → `POLAR_ACCESS_TOKEN`. Scope it with `checkouts:write` (required for checkout) plus `custom_fields:write` and `products:write` if you plan to run the phone-number setup script below. Leave `POLAR_MODE=sandbox` until you're ready to go live with a production org token.
 4. **Settings → Webhooks → Add Endpoint**, URL = `https://pricepilot-api-cfl6.onrender.com/api/webhooks/polar`, subscribe to `order.paid`. Copy the signing secret into `POLAR_WEBHOOK_SECRET`.
-5. Test checkout with Polar's sandbox test card: `4242 4242 4242 4242`, any future expiry, any CVC.
+5. To require a phone number on Polar's checkout form, copy `backend/.env.example` to `backend/.env`, fill in the 4 `POLAR_*` values above, and run `npm run setup:polar-phone-field` from `backend/` — it creates a required "Phone number" custom field and attaches it to both products (safe to re-run). Do this once per environment (sandbox, then again for production once you go live).
+6. Test checkout with Polar's sandbox test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
 ## 8. Smoke test
 
