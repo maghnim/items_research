@@ -9,7 +9,7 @@ const polar = new Polar({
 // checkout via Polar (trial unlock and paid plans alike) is a one-time payment for an
 // amount computed from our own pricing tables and handed to Polar per-checkout via the
 // `prices` ad-hoc override — no per-combo Product/Price needs to pre-exist in Polar.
-async function createDynamicCheckout({ productId, amountEur, currency = 'eur', successUrl, customerEmail, metadata }) {
+async function createDynamicCheckout({ productId, amountEur, currency = 'eur', successUrl, customerEmail, metadata, locale }) {
   const priceAmount = Math.round(amountEur * 100);
   return polar.checkouts.create({
     products: [productId],
@@ -19,6 +19,7 @@ async function createDynamicCheckout({ productId, amountEur, currency = 'eur', s
     successUrl,
     customerEmail,
     metadata,
+    locale: locale || undefined,
   });
 }
 

@@ -31,7 +31,7 @@ function paypalPlanId(category, months) {
 // has that metadata, so this can never be used to touch an existing authenticated account.
 
 router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (req, res) => {
-  const { category, months } = req.body;
+  const { category, months, locale } = req.body;
   if (!isValidCombo(category, Number(months))) {
     return res.status(400).json({ error: 'Unknown plan category or billing term.' });
   }
@@ -59,6 +59,7 @@ router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (
     successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail,
     metadata,
+    locale,
   });
 
   res.json({ url: checkout.url });
@@ -332,7 +333,7 @@ router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
 // the actual category/months/trialType lives only in checkout metadata.
 
 router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res) => {
-  const { trialType } = req.body;
+  const { trialType, locale } = req.body;
   if (!isValidTrialType(trialType)) {
     return res.status(400).json({ error: 'Unknown trial type.' });
   }
@@ -351,6 +352,7 @@ router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res
     successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail: user.email,
     metadata: { userId: user.id, type: 'trial', trialType },
+    locale,
   });
 
   res.json({ url: checkout.url });
