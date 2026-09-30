@@ -61,8 +61,8 @@ If Render assigns different subdomains (names can be taken), update:
 
 1. Sign up free at https://dashboard.stripe.com/register.
 2. Stay in **Test mode** (toggle top-right).
-3. Go to **Product catalog → Add product**, create two products with **one-time** prices: **€1.00** (24-hour trial) and **€3.99** (7-day trial). Copy their `price_...` IDs into `STRIPE_PRICE_TRIAL_24H` and `STRIPE_PRICE_TRIAL_7D`. Without these, signup's checkout step fails for every user.
-4. Create 4 more products, each with 4 **recurring** monthly-equivalent EUR prices (1/3/6/12-month billing intervals) for the categories **Standard, Premium, Premium Plus, VIP** — see `backend/.env.example` for exact amounts and the 16 env var names (`STRIPE_PRICE_<CATEGORY>_<MONTHS>`). Copy each price's `price_...` ID into the matching env var.
+3. Trials need no Stripe product: Standard, Premium and Premium Plus trials are free, and the €2.99 VIP trial's amount is set in `backend/src/utils/pricing.js` (`TRIAL_PRICES_EUR`).
+4. Create 4 products, each with 4 **recurring** monthly-equivalent EUR prices (1/3/6/12-month billing intervals) for the categories **Standard, Premium, Premium Plus, VIP** — see `backend/.env.example` for exact amounts and the 16 env var names (`STRIPE_PRICE_<CATEGORY>_<MONTHS>`). Copy each price's `price_...` ID into the matching env var.
 5. Go to **Developers → API keys**, copy the test **Secret key** into `STRIPE_SECRET_KEY`.
 6. Go to **Developers → Webhooks → Add endpoint**, URL = `https://pricepilot-api.onrender.com/api/webhooks/stripe`, events = `checkout.session.completed`, `customer.subscription.updated`, `customer.subscription.deleted`. Copy the signing secret into `STRIPE_WEBHOOK_SECRET`.
 7. Test card for checkout: `4242 4242 4242 4242`, any future expiry, any CVC.

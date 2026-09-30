@@ -7,6 +7,9 @@ const PRICING = {
   vip: { 1: 15.99, 3: 34.99, 6: 59.99, 12: 99.99 },
 };
 
+// Mirrors TRIAL_PRICES_EUR in backend/src/utils/pricing.js: a 24-hour trial per plan.
+const TRIAL_PRICES_EUR = { standard: 0, premium: 0, premiumplus: 0, vip: 2.99 };
+
 const CATEGORIES = ['standard', 'premium', 'premiumplus', 'vip'];
 const DURATIONS = [1, 3, 6, 12];
 const DEFAULT_CATEGORY = 'premium';
@@ -53,12 +56,23 @@ function renderPricingTable() {
         <td>${formatMoney(perMonth, currency)} <span class="permonth-suffix">${t('common.perMonth')}</span></td>
         <td>${savingsPct > 0 ? `<span class="savings-pill">-${savingsPct}%</span>` : '—'}</td>
         <td>
-          <button class="btn btn-primary btn-sm" onclick="startStripeCheckout('${activeCategory}', ${months})">${t('pricing.table.action')}</button>
-          <button class="btn btn-outline btn-sm" onclick="startPolarCheckout('${activeCategory}', ${months})">${t('pricing.table.action.polar')}</button>
+          <a class="btn btn-primary btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}&provider=stripe">${t('pricing.table.action')}</a>
+          <a class="btn btn-outline btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}">${t('pricing.table.action.polar')}</a>
         </td>
       </tr>
     `;
   }).join('');
+
+  const trialEl = document.getElementById('pricing-trial');
+  if (trialEl) {
+    const trialPrice = TRIAL_PRICES_EUR[activeCategory];
+    const plan = t(`pricing.cat.${activeCategory}`);
+    trialEl.href = `checkout.html?plan=${activeCategory}&trial=24h`;
+    trialEl.textContent = trialPrice === 0
+      ? t('pricing.trial.free').replace('{plan}', plan)
+      : t('pricing.trial.paid').replace('{plan}', plan)
+        .replace('{price}', formatMoney(currency === 'USD' ? trialPrice * EUR_TO_USD : trialPrice, currency));
+  }
 
   const usdNote = document.getElementById('pricing-usd-note');
   if (usdNote) usdNote.style.display = currency === 'USD' ? 'block' : 'none';

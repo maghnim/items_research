@@ -14,10 +14,11 @@ function formatMoney(amount, currency) {
 }
 
 function itemLabel(metadata) {
+  const category = CATEGORY_LABELS[metadata.category] || metadata.category;
   if (metadata.type === 'trial') {
+    if (metadata.category) return t('payment.item.trialplan').replace('{category}', category);
     return t(metadata.trialType === '7d' ? 'payment.item.trial7d' : 'payment.item.trial24h');
   }
-  const category = CATEGORY_LABELS[metadata.category] || metadata.category;
   return t('payment.item.plan').replace('{category}', category).replace('{months}', metadata.months);
 }
 

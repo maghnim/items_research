@@ -5,13 +5,16 @@
 const CATEGORIES = ['standard', 'premium', 'premiumplus', 'vip'];
 const DURATIONS = [1, 3, 6, 12];
 
-// The trial itself is a paid, one-time unlock (not a subscription): pay once, get
-// trial-tier access for a fixed window. Two options, each a one-time (non-recurring)
-// Price — STRIPE_PRICE_TRIAL_24H / STRIPE_PRICE_TRIAL_7D.
-const TRIALS = {
-  '24h': { priceEur: 1.00, durationHours: 24 },
-  '7d': { priceEur: 3.99, durationHours: 24 * 7 },
-};
+// Every plan has a 24-hour trial of that plan (its full limits, see CATEGORY_LIMITS).
+// Free for Standard / Premium / Premium Plus; VIP's is a one-time €2.99 payment.
+// One trial per account — see services/trials.js.
+const TRIAL_HOURS = 24;
+const TRIAL_PRICES_EUR = { standard: 0, premium: 0, premiumplus: 0, vip: 2.99 };
+
+// Trials sold before per-plan trials existed (€1 / 24h and €3.99 / 7d, trial-tier
+// access). Only kept so a webhook for a checkout started before the switch still
+// grants what was paid for.
+const LEGACY_TRIAL_HOURS = { '24h': 24, '7d': 24 * 7 };
 
 const PRICES_EUR = {
   standard: { 1: 9.99, 3: 19.99, 6: 29.99, 12: 45.99 },
@@ -32,18 +35,9 @@ function isValidCombo(category, months) {
   return CATEGORIES.indexOf(category) !== -1 && Object.prototype.hasOwnProperty.call(PRICES_EUR[category] || {}, months);
 }
 
-function isValidTrialType(type) {
-  return Object.prototype.hasOwnProperty.call(TRIALS, type);
-}
-
-function trialDurationMs(type) {
-  const trial = TRIALS[type];
-  return trial ? trial.durationHours * 60 * 60 * 1000 : null;
-}
-
-// e.g. trialEnvKey('STRIPE_PRICE', '24h') -> 'STRIPE_PRICE_TRIAL_24H'
-function trialEnvKey(prefix, type) {
-  return `${prefix}_TRIAL_${type.toUpperCase()}`;
+// null for an unknown category, 0 for a free trial.
+function trialPriceFor(category) {
+  return CATEGORIES.indexOf(category) === -1 ? null : TRIAL_PRICES_EUR[category];
 }
 
 function priceFor(category, months) {
@@ -66,12 +60,12 @@ module.exports = {
   DURATIONS,
   PRICES_EUR,
   CATEGORY_LIMITS,
-  TRIALS,
+  TRIAL_HOURS,
+  TRIAL_PRICES_EUR,
+  LEGACY_TRIAL_HOURS,
   isValidCombo,
-  isValidTrialType,
-  trialDurationMs,
+  trialPriceFor,
   priceFor,
   getCategoryLimits,
   envKey,
-  trialEnvKey,
 };

@@ -36,6 +36,7 @@ async function checkOneProduct(product) {
 }
 
 // Runs every 5 minutes; picks up any product whose plan-based interval has elapsed.
+// Skips accounts whose trial or one-time plan has run out (same rule as routes/products.js).
 async function runDueScrapes() {
   const { rows: products } = await db.query(`
     SELECT tp.*, u.plan_tier
@@ -43,6 +44,8 @@ async function runDueScrapes() {
     JOIN users u ON u.id = tp.user_id
     WHERE tp.is_active = true
       AND u.plan_status = 'active'
+      AND (u.plan_expires_at IS NULL OR u.plan_expires_at > now())
+      AND NOT (u.plan_tier = 'trial' AND u.trial_expires_at IS NOT NULL AND u.trial_expires_at < now())
   `);
 
   const due = products.filter((p) => {

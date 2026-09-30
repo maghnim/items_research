@@ -6,7 +6,8 @@ const { requireAuth, optionalAuth } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/asyncHandler');
 const { getSubscription, createOrder, captureOrder } = require('../services/paypal');
 const { polar, createDynamicCheckout } = require('../services/polar');
-const { isValidCombo, envKey, TRIALS, isValidTrialType, trialDurationMs, trialEnvKey, priceFor } = require('../utils/pricing');
+const { isValidCombo, envKey, trialPriceFor, priceFor, getCategoryLimits } = require('../utils/pricing');
+const { isTrialEligible, grantTrial } = require('../services/trials');
 const { signToken } = require('./auth');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
@@ -162,25 +163,57 @@ router.post('/polar/claim-account', asyncHandler(async (req, res) => {
 
 router.use(requireAuth);
 
+// --- Trials ---
+// A 24-hour trial of one plan, once per account (utils/pricing.js, services/trials.js).
+// Free trials are granted right here; a paid one (VIP) goes through a checkout below
+// and is granted by the payment webhook.
+
+router.post('/trial/start', asyncHandler(async (req, res) => {
+  const { category } = req.body;
+  const price = trialPriceFor(category);
+  if (price === null) {
+    return res.status(400).json({ error: 'Unknown plan category.' });
+  }
+  if (price > 0) {
+    return res.status(400).json({ error: 'This trial is paid — start it from its checkout link.' });
+  }
+  if (!(await grantTrial(req.userId, category))) {
+    return res.status(409).json({ error: 'This account has already used its free trial or has a plan.' });
+  }
+  res.json({ ok: true });
+}));
+
+// Shared checks for the paid-trial checkout routes. Sends the error response itself and
+// returns null when the request can't go ahead.
+async function paidTrialOrReject(req, res) {
+  const { category } = req.body;
+  const price = trialPriceFor(category);
+  if (price === null) {
+    res.status(400).json({ error: 'Unknown plan category.' });
+    return null;
+  }
+  if (price === 0) {
+    res.status(400).json({ error: 'This trial is free — no payment needed.' });
+    return null;
+  }
+  if (!(await isTrialEligible(req.userId))) {
+    res.status(409).json({ error: 'This account has already used its trial or has a plan.' });
+    return null;
+  }
+  return { category, price };
+}
+
 // --- Stripe ---
 // Billing always runs in EUR (the merchant's base currency) regardless of what the
 // pricing page displayed — the frontend's USD figure for English-speaking visitors is a
 // display-only estimate, disclosed as such; the actual charge is EUR, same as any
 // international customer paying a European merchant.
 
-// One-time charge that unlocks a fixed window of trial-tier access. Two options
-// (24h / 7d, see utils/pricing.js). Not a subscription — mode: 'payment', no
-// recurring billing until the user picks a real plan.
+// One-time charge for a paid plan trial. Not a subscription — mode: 'payment'. The
+// amount comes from utils/pricing.js via price_data, so no Stripe Price has to exist.
 router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, res) => {
-  const { trialType } = req.body;
-  if (!isValidTrialType(trialType)) {
-    return res.status(400).json({ error: 'Unknown trial type.' });
-  }
-
-  const priceId = process.env[trialEnvKey('STRIPE_PRICE', trialType)];
-  if (!priceId) {
-    return res.status(400).json({ error: 'Trial payment is not configured yet.' });
-  }
+  const trial = await paidTrialOrReject(req, res);
+  if (!trial) return;
 
   const userResult = await db.query('SELECT * FROM users WHERE id = $1', [req.userId]);
   const user = userResult.rows[0];
@@ -195,10 +228,17 @@ router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, re
   const session = await stripe.checkout.sessions.create({
     mode: 'payment',
     customer: customerId,
-    line_items: [{ price: priceId, quantity: 1 }],
+    line_items: [{
+      price_data: {
+        currency: 'eur',
+        unit_amount: Math.round(trial.price * 100),
+        product_data: { name: `Pricera ${getCategoryLimits(trial.category).label} — 24-hour trial` },
+      },
+      quantity: 1,
+    }],
     success_url: `${process.env.APP_URL}/dashboard.html?checkout=trial-success`,
-    cancel_url: `${process.env.APP_URL}/signup.html?checkout=cancelled`,
-    metadata: { userId: user.id, type: 'trial', trialType },
+    cancel_url: `${process.env.APP_URL}/pricing.html?checkout=cancelled`,
+    metadata: { userId: user.id, type: 'trial', trialType: '24h', category: trial.category },
   });
 
   res.json({ url: session.url });
@@ -279,28 +319,28 @@ router.post('/paypal/confirm', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: `Subscription is not active (status: ${subscription.status}).` });
   }
 
+  // plan_expires_at = NULL: a subscription renews, so drop any expiry left by a trial.
   await db.query(
-    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active' WHERE id = $4`,
+    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
     [subscriptionId, category, months, req.userId]
   );
 
   res.json({ ok: true });
 }));
 
-// One-time trial unlock via PayPal Orders API (not a Billing Plan/Subscription).
+// One-time paid trial via PayPal Orders API (not a Billing Plan/Subscription).
 router.post('/paypal/create-trial-order', asyncHandler(async (req, res) => {
-  const { trialType } = req.body;
-  if (!isValidTrialType(trialType)) {
-    return res.status(400).json({ error: 'Unknown trial type.' });
-  }
-  const order = await createOrder(TRIALS[trialType].priceEur, 'EUR');
+  const trial = await paidTrialOrReject(req, res);
+  if (!trial) return;
+  const order = await createOrder(trial.price, 'EUR');
   res.json({ orderId: order.id });
 }));
 
 router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
-  const { orderId, trialType } = req.body;
-  if (!orderId || !isValidTrialType(trialType)) {
-    return res.status(400).json({ error: 'orderId and a valid trialType are required.' });
+  const { orderId, category } = req.body;
+  const price = trialPriceFor(category);
+  if (!orderId || !price) {
+    return res.status(400).json({ error: 'orderId and a paid-trial category are required.' });
   }
 
   const capture = await captureOrder(orderId);
@@ -308,20 +348,16 @@ router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
     return res.status(400).json({ error: `Payment not completed (status: ${capture.status}).` });
   }
 
-  // Don't trust the client's trialType blindly — confirm the amount actually captured
-  // by PayPal matches what that trial type costs before granting its duration.
+  // Don't trust the client's category blindly — confirm the amount actually captured
+  // by PayPal matches what that plan's trial costs before granting it.
   const captured = capture.purchase_units?.[0]?.payments?.captures?.[0]?.amount;
-  const expected = TRIALS[trialType];
-  if (!captured || captured.currency_code !== 'EUR' || Number(captured.value) !== expected.priceEur) {
-    return res.status(400).json({ error: 'Captured amount does not match the requested trial type.' });
+  if (!captured || captured.currency_code !== 'EUR' || Number(captured.value) !== price) {
+    return res.status(400).json({ error: 'Captured amount does not match the requested trial.' });
   }
 
-  const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
-  await db.query(
-    `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
-    [trialExpiresAt, trialType, req.userId]
-  );
-
+  if (!(await grantTrial(req.userId, category))) {
+    return res.status(409).json({ error: 'This account has already used its trial or has a plan.' });
+  }
   res.json({ ok: true });
 }));
 
@@ -330,13 +366,11 @@ router.post('/paypal/capture-trial-order', asyncHandler(async (req, res) => {
 // checkout here (trial and paid plans alike) is a one-time payment for an amount read
 // straight from utils/pricing.js and handed to Polar per-checkout — see services/polar.js.
 // Two generic one-time Products (POLAR_PRODUCT_TRIAL / POLAR_PRODUCT_PLAN) cover all combos;
-// the actual category/months/trialType lives only in checkout metadata.
+// the actual category/months lives only in checkout metadata.
 
 router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res) => {
-  const { trialType, locale } = req.body;
-  if (!isValidTrialType(trialType)) {
-    return res.status(400).json({ error: 'Unknown trial type.' });
-  }
+  const trial = await paidTrialOrReject(req, res);
+  if (!trial) return;
 
   const productId = process.env.POLAR_PRODUCT_TRIAL;
   if (!productId) {
@@ -348,11 +382,11 @@ router.post('/polar/create-trial-checkout-session', asyncHandler(async (req, res
 
   const checkout = await createDynamicCheckout({
     productId,
-    amountEur: TRIALS[trialType].priceEur,
+    amountEur: trial.price,
     successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail: user.email,
-    metadata: { userId: user.id, type: 'trial', trialType },
-    locale,
+    metadata: { userId: user.id, type: 'trial', trialType: '24h', category: trial.category },
+    locale: req.body.locale,
   });
 
   res.json({ url: checkout.url });

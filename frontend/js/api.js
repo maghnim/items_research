@@ -42,7 +42,9 @@ async function api(path, { method = 'GET', body } = {}) {
   try { data = await res.json(); } catch (_) { /* no body */ }
 
   if (!res.ok) {
-    throw new Error(data?.error || `Request failed (${res.status})`);
+    const err = new Error(data?.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
   }
   return data;
 }

@@ -24,10 +24,10 @@ async function checkPaymentStatus() {
     if (fresh.plan_status !== 'active') {
       titleEl.textContent = t('dashboard.paywall.pending.title');
       bodyEl.textContent = t('dashboard.paywall.pending.body');
-      ctaEl.textContent = t('dashboard.paywall.pending.cta24h');
-      ctaEl.onclick = () => startPolarTrialCheckout('24h');
-      cta2El.textContent = t('dashboard.paywall.pending.cta7d');
-      cta2El.onclick = () => startPolarTrialCheckout('7d');
+      ctaEl.textContent = t('dashboard.paywall.pending.ctatrial');
+      ctaEl.onclick = () => { window.location.href = 'checkout.html?plan=premium&trial=24h'; };
+      cta2El.textContent = t('dashboard.paywall.pending.ctaplans');
+      cta2El.onclick = () => { window.location.href = 'pricing.html'; };
       cta2El.style.display = 'inline-block';
       banner.style.display = 'flex';
       if (addBtn) addBtn.disabled = true;

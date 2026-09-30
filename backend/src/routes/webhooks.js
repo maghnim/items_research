@@ -3,7 +3,8 @@ const Stripe = require('stripe');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const db = require('../db');
-const { CATEGORIES, DURATIONS, envKey, isValidTrialType, trialDurationMs } = require('../utils/pricing');
+const { CATEGORIES, DURATIONS, envKey } = require('../utils/pricing');
+const { applyPaidTrial } = require('../services/trials');
 const { verifyWebhookSignature } = require('../services/paypal');
 const { validateEvent, WebhookVerificationError } = require('@polar-sh/sdk/webhooks');
 
@@ -39,22 +40,14 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
         const type = session.metadata?.type;
 
         if (userId && type === 'trial') {
-          const trialType = session.metadata?.trialType;
-          if (isValidTrialType(trialType)) {
-            const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
-            await db.query(
-              `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
-              [trialExpiresAt, trialType, userId]
-            );
-          } else {
-            console.error('[webhooks/stripe] trial checkout completed with unknown trialType:', trialType);
-          }
+          await applyPaidTrial(session.metadata, 'webhooks/stripe');
         } else if (userId && session.metadata?.category) {
           const subscriptionId = session.subscription;
           const category = session.metadata.category;
           const months = session.metadata.months;
+          // plan_expires_at = NULL: a subscription renews, so drop any expiry left by a trial.
           await db.query(
-            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active' WHERE id = $4`,
+            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
             [subscriptionId, category, months, userId]
           );
         }
@@ -154,16 +147,7 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
       const userId = metadata.userId;
 
       if (userId && metadata.type === 'trial') {
-        const trialType = metadata.trialType;
-        if (isValidTrialType(trialType)) {
-          const trialExpiresAt = new Date(Date.now() + trialDurationMs(trialType));
-          await db.query(
-            `UPDATE users SET plan_status = 'active', trial_expires_at = $1, trial_type = $2 WHERE id = $3`,
-            [trialExpiresAt, trialType, userId]
-          );
-        } else {
-          console.error('[webhooks/polar] trial order paid with unknown trialType:', trialType);
-        }
+        await applyPaidTrial(metadata, 'webhooks/polar');
       } else if (userId && metadata.type === 'plan') {
         const { category, months } = metadata;
         await db.query(

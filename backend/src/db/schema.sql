@@ -14,8 +14,8 @@ CREATE TABLE IF NOT EXISTS users (
   plan_duration_months INTEGER, -- billing term chosen at checkout: 1 | 3 | 6 | 12
   plan_status TEXT NOT NULL DEFAULT 'pending_payment', -- pending_payment | active | past_due | canceled
   plan_expires_at TIMESTAMPTZ, -- Polar plans only: Polar has no auto-renewal, so expiry is tracked here
-  trial_expires_at TIMESTAMPTZ, -- set on the one-time trial payment: now() + trial_type's duration
-  trial_type TEXT, -- which trial was purchased: 24h | 7d
+  trial_expires_at TIMESTAMPTZ, -- set when the account's one trial starts: now() + 24h (see services/trials.js)
+  trial_type TEXT, -- 24h (a 24-hour trial of plan_tier); older accounts: 24h | 7d trial-tier unlocks
   password_needs_setup BOOLEAN NOT NULL DEFAULT false, -- true for accounts auto-created from a guest Polar checkout, until they claim a real password
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
