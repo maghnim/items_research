@@ -119,8 +119,10 @@ services:
         sync: false
       - key: POLAR_WEBHOOK_SECRET
         sync: false
+      # Live Polar account. A Blueprint sync re-applies this value, so it must match the
+      # live token in POLAR_ACCESS_TOKEN or every checkout fails with invalid_token.
       - key: POLAR_MODE
-        value: sandbox
+        value: production
       - key: POLAR_PRODUCT_TRIAL
         sync: false
       - key: POLAR_PRODUCT_PLAN
