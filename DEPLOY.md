@@ -87,6 +87,13 @@ Polar has no Stripe-style "bill every N months" recurring interval, so Pricera u
 5. To require a phone number on Polar's checkout form, copy `backend/.env.example` to `backend/.env`, fill in the 4 `POLAR_*` values above, and run `npm run setup:polar-phone-field` from `backend/` — it creates a required "Phone number" custom field and attaches it to both products (safe to re-run). Do this once per environment (sandbox, then again for production once you go live).
 6. Test checkout with Polar's sandbox test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
+## Keeping live checkout working
+
+- Payment settings (`POLAR_MODE`, `POLAR_ACCESS_TOKEN`, `POLAR_PRODUCT_*`, `PAYPAL_MODE`, Stripe keys) are set in the **Render dashboard only**. They are `sync: false` in `render.yaml`, so a change to that file never overwrites them. Don't give them a `value:` there.
+- `POLAR_MODE` must match where the token was created: `production` for polar.sh, `sandbox` for sandbox.polar.sh.
+- `https://pricepilot-api-cfl6.onrender.com/api/health/payments` returns 200 when Polar checkout works, or 503 with the reason.
+- `.github/workflows/payments-health.yml` checks it after every push to `main` and every 6 hours; GitHub emails you if it fails. Run it by hand from the repo's **Actions** tab.
+
 ## 8. Smoke test
 
 1. Visit `https://pricepilot-app.onrender.com`, sign up for a trial account.

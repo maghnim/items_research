@@ -7,6 +7,8 @@ const productRoutes = require('./routes/products');
 const billingRoutes = require('./routes/billing');
 const webhookRoutes = require('./routes/webhooks');
 const { startScheduler } = require('./services/scheduler');
+const { paymentHealth } = require('./services/paymentHealth');
+const { asyncHandler } = require('./middleware/asyncHandler');
 
 const app = express();
 
@@ -30,6 +32,13 @@ app.use(express.json());
 
 app.get('/api/health', (req, res) => res.json({ ok: true, service: 'pricepilot-backend' }));
 
+// 503 when Polar checkouts would fail. Polled by .github/workflows/payments-health.yml,
+// which emails the repo owner on failure.
+app.get('/api/health/payments', asyncHandler(async (req, res) => {
+  const health = await paymentHealth();
+  res.status(health.polar.ok ? 200 : 503).json(health);
+}));
+
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/billing', billingRoutes);
@@ -43,4 +52,8 @@ const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Pricera API listening on port ${PORT}`);
   startScheduler();
+  paymentHealth().then(({ polar }) => {
+    if (polar.ok) console.log(`[payments] Polar OK (${polar.mode} mode)`);
+    else console.error(`[payments] POLAR CHECKOUT IS BROKEN: ${polar.error}`);
+  });
 });

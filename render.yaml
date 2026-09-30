@@ -1,3 +1,8 @@
+# NOTE: whenever this file changes, a Render Blueprint sync re-applies every `value:`
+# below over what is set in the Render dashboard. Anything that differs between
+# environments or that you change by hand (payment modes, keys, product IDs) must be
+# `sync: false`, so it is managed in the dashboard only and never overwritten.
+
 services:
   # Backend API — Node/Express, free web service.
   - type: web
@@ -73,8 +78,9 @@ services:
         sync: false
       - key: PAYPAL_CLIENT_SECRET
         sync: false
+      # Set in the Render dashboard only (sandbox | live) — see the note at the top.
       - key: PAYPAL_MODE
-        value: sandbox
+        sync: false
       # ID of the webhook registered in the PayPal Developer Dashboard, used to verify
       # that incoming /api/webhooks/paypal requests actually came from PayPal.
       - key: PAYPAL_WEBHOOK_ID
@@ -119,10 +125,11 @@ services:
         sync: false
       - key: POLAR_WEBHOOK_SECRET
         sync: false
-      # Live Polar account. A Blueprint sync re-applies this value, so it must match the
-      # live token in POLAR_ACCESS_TOKEN or every checkout fails with invalid_token.
+      # Set in the Render dashboard only (production | sandbox) — see the note at the top.
+      # Must match the Polar environment POLAR_ACCESS_TOKEN was created in, or every
+      # checkout fails with invalid_token. /api/health/payments reports a mismatch.
       - key: POLAR_MODE
-        value: production
+        sync: false
       - key: POLAR_PRODUCT_TRIAL
         sync: false
       - key: POLAR_PRODUCT_PLAN

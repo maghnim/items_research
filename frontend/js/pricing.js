@@ -18,6 +18,8 @@ const DEFAULT_CATEGORY = 'premium';
 const EUR_TO_USD = 1.08;
 
 let activeCategory = DEFAULT_CATEGORY;
+// The Stripe button only shows once the backend reports Stripe is set up (GET /billing/providers).
+let stripeEnabled = false;
 
 function formatMoney(amount, currency) {
   const symbol = currency === 'USD' ? '$' : '€';
@@ -56,7 +58,7 @@ function renderPricingTable() {
         <td>${formatMoney(perMonth, currency)} <span class="permonth-suffix">${t('common.perMonth')}</span></td>
         <td>${savingsPct > 0 ? `<span class="savings-pill">-${savingsPct}%</span>` : '—'}</td>
         <td>
-          <a class="btn btn-primary btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}&provider=stripe">${t('pricing.table.action')}</a>
+          ${stripeEnabled ? `<a class="btn btn-primary btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}&provider=stripe">${t('pricing.table.action')}</a>` : ''}
           <a class="btn btn-outline btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}">${t('pricing.table.action.polar')}</a>
         </td>
       </tr>
@@ -91,3 +93,10 @@ document.querySelectorAll('.pricing-tab').forEach((tab) => {
 window.addEventListener('pp:locale-ready', renderPricingTable);
 
 renderPricingTable();
+
+api('/billing/providers')
+  .then((providers) => {
+    stripeEnabled = !!providers.stripe;
+    if (stripeEnabled) renderPricingTable();
+  })
+  .catch(() => { /* keep Polar only */ });

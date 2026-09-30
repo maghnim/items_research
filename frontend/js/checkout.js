@@ -1,6 +1,7 @@
 // Permanent, shareable checkout links — safe to use as buttons or redirects anywhere:
 //   checkout.html?plan=vip&months=12                  pays with Polar, no account needed
 //   checkout.html?plan=vip&months=12&provider=stripe  Stripe, signs up / logs in first
+//                                                     (Polar while Stripe isn't set up)
 //   checkout.html?plan=premium&trial=24h              24-hour trial of that plan
 // Every visit creates a fresh checkout session, so the link itself never expires.
 
@@ -27,12 +28,20 @@ async function startCheckout() {
   const plan = params.get('plan');
   const months = Number(params.get('months'));
   const isTrial = params.get('trial') === '24h';
-  const provider = params.get('provider') === 'stripe' ? 'stripe' : 'polar';
+  let provider = params.get('provider') === 'stripe' ? 'stripe' : 'polar';
   const locale = document.documentElement.getAttribute('lang') || 'en';
 
   if (CHECKOUT_PLANS.indexOf(plan) === -1 || (!isTrial && CHECKOUT_TERMS.indexOf(months) === -1)) {
     showCheckoutError(t('checkout.error.invalid'));
     return;
+  }
+  // A Stripe link keeps working while Stripe isn't set up: it falls back to Polar.
+  if (provider === 'stripe') {
+    try {
+      if (!(await api('/billing/providers')).stripe) provider = 'polar';
+    } catch (_) {
+      provider = 'polar';
+    }
   }
   if ((isTrial || provider === 'stripe') && !getToken()) {
     sendToAuth('signup.html');

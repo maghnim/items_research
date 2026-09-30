@@ -8,6 +8,7 @@ const { getSubscription, createOrder, captureOrder } = require('../services/payp
 const { polar, createDynamicCheckout } = require('../services/polar');
 const { isValidCombo, envKey, trialPriceFor, priceFor, getCategoryLimits } = require('../utils/pricing');
 const { isTrialEligible, grantTrial } = require('../services/trials');
+const { stripeIsConfigured } = require('../services/paymentHealth');
 const { signToken } = require('./auth');
 
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
@@ -21,6 +22,13 @@ function stripePriceId(category, months) {
 function paypalPlanId(category, months) {
   return process.env[envKey('PAYPAL_PLAN', category, months)];
 }
+
+// Which payment options the frontend should offer (pricing.js, checkout.js).
+router.get('/providers', (req, res) => {
+  res.json({ polar: true, stripe: stripeIsConfigured() });
+});
+
+const STRIPE_NOT_SET_UP = 'Card payment via Stripe is not available yet. Please use the other checkout option.';
 
 // --- Polar guest checkout (plan purchases only) ---
 // These three routes must stay above router.use(requireAuth) below: pricing.html lets
@@ -212,6 +220,9 @@ async function paidTrialOrReject(req, res) {
 // One-time charge for a paid plan trial. Not a subscription — mode: 'payment'. The
 // amount comes from utils/pricing.js via price_data, so no Stripe Price has to exist.
 router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, res) => {
+  if (!stripeIsConfigured()) {
+    return res.status(400).json({ error: STRIPE_NOT_SET_UP });
+  }
   const trial = await paidTrialOrReject(req, res);
   if (!trial) return;
 
@@ -245,6 +256,9 @@ router.post('/stripe/create-trial-checkout-session', asyncHandler(async (req, re
 }));
 
 router.post('/stripe/create-checkout-session', asyncHandler(async (req, res) => {
+  if (!stripeIsConfigured()) {
+    return res.status(400).json({ error: STRIPE_NOT_SET_UP });
+  }
   const { category, months } = req.body;
   if (!isValidCombo(category, Number(months))) {
     return res.status(400).json({ error: 'Unknown plan category or billing term.' });
