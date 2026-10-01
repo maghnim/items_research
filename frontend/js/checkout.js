@@ -14,6 +14,7 @@ const TRIAL_PRICES_EUR = { standard: 0, premium: 0, premiumplus: 0, vip: 2.99 };
 
 function showCheckoutError(text) {
   document.getElementById('checkout-status').style.display = 'none';
+  document.getElementById('checkout-spinner').style.display = 'none';
   const msg = document.getElementById('form-msg');
   msg.textContent = text;
   msg.className = 'form-msg error';
