@@ -1,5 +1,26 @@
 <title data-i18n="meta.checkout.title">Checkout — Pricera</title>
 <meta charset="UTF-8" />
+<script>
+  // Fast path: a plan link opened by a visitor who isn't logged in goes straight to the
+  // API (GET /billing/polar/go), which creates the Polar checkout and redirects there,
+  // before anything else on this page loads. js/checkout.js handles everything else
+  // (trials, Stripe, logged-in buyers) and shows errors, which come back with direct=0.
+  (function () {
+    var params = new URLSearchParams(location.search);
+    var token = null;
+    var lang = null;
+    try { token = localStorage.getItem('pp_token'); lang = localStorage.getItem('pp_lang'); } catch (e) {}
+    if (!params.get('months') || params.get('trial') || params.get('provider') === 'stripe' || params.get('direct') === '0' || token) return;
+    // Same API host as js/api.js.
+    var api = location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:4000/api'
+      : 'https://pricepilot-api-cfl6.onrender.com/api';
+    params.set('locale', lang || ((navigator.language || '').toLowerCase().indexOf('fr') === 0 ? 'fr' : 'en'));
+    window.checkoutRedirecting = true;
+    location.replace(api + '/billing/polar/go?' + params.toString());
+  })();
+</script>
+<link rel="preconnect" href="https://pricepilot-api-cfl6.onrender.com" crossorigin />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="robots" content="noindex" />
 <link rel="stylesheet" href="css/style.css" />

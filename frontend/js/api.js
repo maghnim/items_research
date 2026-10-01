@@ -1,4 +1,5 @@
-// Update PRODUCTION_API_URL after deploying the backend (see DEPLOY.md).
+// Update PRODUCTION_API_URL after deploying the backend (see DEPLOY.md) — and the copy in
+// checkout.html's inline fast-path script.
 const PRODUCTION_API_URL = 'https://pricepilot-api-cfl6.onrender.com/api';
 
 const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'

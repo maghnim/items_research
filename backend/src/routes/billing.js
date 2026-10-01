@@ -39,24 +39,17 @@ const STRIPE_NOT_SET_UP = 'Card payment via Stripe is not available yet. Please 
 // here, but ONLY for checkouts explicitly marked guest — a normal logged-in purchase never
 // has that metadata, so this can never be used to touch an existing authenticated account.
 
-router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (req, res) => {
-  const { category, months, locale } = req.body;
-  const users = Number(req.body.users || 1);
-  if (!isValidCombo(category, Number(months), users)) {
-    return res.status(400).json({ error: 'Unknown plan category, billing term or number of users.' });
-  }
-
-  const productId = process.env.POLAR_PRODUCT_PLAN;
-  if (!productId) {
-    return res.status(400).json({ error: 'Polar payment is not configured yet.' });
-  }
+// Creates the Polar checkout for a plan and returns its URL, or null for an unknown
+// combo. Without a userId it is a guest checkout (see the note above).
+async function createPolarPlanCheckout({ category, months, users, userId, locale }) {
+  if (!isValidCombo(category, months, users)) return null;
 
   let customerEmail;
   let metadata;
-  if (req.userId) {
-    const userResult = await db.query('SELECT email FROM users WHERE id = $1', [req.userId]);
+  if (userId) {
+    const userResult = await db.query('SELECT email FROM users WHERE id = $1', [userId]);
     customerEmail = userResult.rows[0]?.email;
-    metadata = { userId: req.userId, type: 'plan', category, months: String(months), users: String(users) };
+    metadata = { userId, type: 'plan', category, months: String(months), users: String(users) };
   } else {
     // No account yet — Polar's own checkout form collects the email; the webhook
     // creates the account from it once payment succeeds.
@@ -64,15 +57,53 @@ router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (
   }
 
   const checkout = await createDynamicCheckout({
-    productId,
-    amountEur: priceFor(category, Number(months), users),
+    productId: process.env.POLAR_PRODUCT_PLAN,
+    amountEur: priceFor(category, months, users),
     successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail,
     metadata,
     locale,
   });
+  return checkout.url;
+}
 
-  res.json({ url: checkout.url });
+router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (req, res) => {
+  if (!process.env.POLAR_PRODUCT_PLAN) {
+    return res.status(400).json({ error: 'Polar payment is not configured yet.' });
+  }
+  const url = await createPolarPlanCheckout({
+    category: req.body.category,
+    months: Number(req.body.months),
+    users: Number(req.body.users || 1),
+    userId: req.userId,
+    locale: req.body.locale,
+  });
+  if (!url) {
+    return res.status(400).json({ error: 'Unknown plan category, billing term or number of users.' });
+  }
+  res.json({ url });
+}));
+
+// Fast path for checkout.html plan links (guests only): a plain browser navigation, so
+// no scripts, no CORS preflight — create the checkout and redirect straight to Polar.
+// On any problem, hand back to checkout.html with direct=0, which runs the normal
+// script flow and shows the error.
+router.get('/polar/go', asyncHandler(async (req, res) => {
+  const { plan, months, users, locale } = req.query;
+  const back = new URLSearchParams({ plan: String(plan || ''), months: String(months || ''), direct: '0' });
+  if (users) back.set('users', String(users));
+  try {
+    const url = process.env.POLAR_PRODUCT_PLAN && await createPolarPlanCheckout({
+      category: plan,
+      months: Number(months),
+      users: Number(users || 1),
+      locale: typeof locale === 'string' ? locale : undefined,
+    });
+    if (url) return res.redirect(303, url);
+  } catch (err) {
+    console.error('[billing/polar/go] checkout failed:', err.message);
+  }
+  res.redirect(303, `${process.env.APP_URL}/checkout.html?${back}`);
 }));
 
 // Fetched by payment-success.html after Polar redirects back with ?checkout_id={CHECKOUT_ID}.

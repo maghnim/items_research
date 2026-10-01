@@ -23,7 +23,8 @@ process.on('uncaughtException', (err) => {
   console.error('[uncaughtException]', err);
 });
 
-app.use(cors({ origin: process.env.APP_URL || '*' }));
+// maxAge: browsers cache the CORS preflight for a day instead of repeating it per request.
+app.use(cors({ origin: process.env.APP_URL || '*', maxAge: 86400 }));
 
 // Webhooks must be mounted BEFORE express.json() so Stripe's route can read the raw body.
 app.use('/api/webhooks', webhookRoutes);

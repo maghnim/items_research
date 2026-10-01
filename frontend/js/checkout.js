@@ -26,6 +26,8 @@ function sendToAuth(page) {
 }
 
 async function startCheckout() {
+  // The inline fast path in checkout.html is already sending this visitor to Polar.
+  if (window.checkoutRedirecting) return;
   const params = new URLSearchParams(window.location.search);
   const plan = params.get('plan');
   const months = Number(params.get('months'));
