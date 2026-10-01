@@ -1,11 +1,20 @@
 // Mirrors backend/src/utils/pricing.js — EUR is the source of truth for both display
 // (converted to USD for English-speaking visitors) and actual billing.
 const PRICING = {
-  standard: { 1: 9.99, 3: 19.99, 6: 29.99, 12: 45.99 },
-  premium: { 1: 10.99, 3: 25.99, 6: 39.99, 12: 49.99 },
-  premiumplus: { 1: 11.99, 3: 28.99, 6: 45.99, 12: 64.99 },
-  vip: { 1: 15.99, 3: 34.99, 6: 59.99, 12: 99.99 },
+  standard: { 1: 9.99, 3: 24.99, 6: 34.99, 12: 45.99 },
+  premium: { 1: 10.99, 3: 27.99, 6: 38.99, 12: 49.99 },
+  premiumplus: { 1: 11.99, 3: 32.99, 6: 48.99, 12: 64.99 },
+  vip: { 1: 15.99, 3: 44.99, 6: 69.99, 12: 99.99 },
 };
+
+// Mirrors USER_PRICE_PCT / priceFor() in backend/src/utils/pricing.js: extra users at a
+// growing discount (-10% / -15% / -20%), computed in integer cents, rounded half up.
+const USER_PRICE_PCT = { 1: 100, 2: 180, 3: 255, 4: 320 };
+
+function planPrice(category, months, users) {
+  const cents = Math.round(PRICING[category][months] * 100);
+  return Math.floor((cents * USER_PRICE_PCT[users] + 50) / 100) / 100;
+}
 
 // Mirrors TRIAL_PRICES_EUR in backend/src/utils/pricing.js: a 24-hour trial per plan.
 const TRIAL_PRICES_EUR = { standard: 0, premium: 0, premiumplus: 0, vip: 2.99 };
@@ -18,6 +27,7 @@ const DEFAULT_CATEGORY = 'premium';
 const EUR_TO_USD = 1.08;
 
 let activeCategory = DEFAULT_CATEGORY;
+let activeUsers = 1;
 // The Stripe button only shows once the backend reports Stripe is set up (GET /billing/providers).
 let stripeEnabled = false;
 
@@ -28,12 +38,22 @@ function formatMoney(amount, currency) {
 
 function renderPricingTable() {
   const currency = (window.getCurrency && window.getCurrency()) || 'EUR';
-  const prices = PRICING[activeCategory];
-  const baseRate = prices[1]; // 1-month price = reference rate for the savings %
+  const baseRate = planPrice(activeCategory, 1, activeUsers); // 1-month price = reference for the savings %
 
-  document.querySelectorAll('.pricing-tab').forEach((tab) => {
+  document.querySelectorAll('.pricing-tab[data-category]').forEach((tab) => {
     tab.classList.toggle('active', tab.getAttribute('data-category') === activeCategory);
   });
+  document.querySelectorAll('.pricing-tab[data-users]').forEach((tab) => {
+    tab.classList.toggle('active', Number(tab.getAttribute('data-users')) === activeUsers);
+  });
+
+  const usersNoteEl = document.getElementById('pricing-users-note');
+  if (usersNoteEl) {
+    usersNoteEl.textContent = activeUsers > 1 ? t('pricing.users.pricefor').replace('{n}', activeUsers) : '';
+  }
+  // Stripe has prices for 1 user only; multi-user plans are paid through Polar.
+  const showStripe = stripeEnabled && activeUsers === 1;
+  const usersParam = activeUsers > 1 ? `&users=${activeUsers}` : '';
 
   const metaEl = document.getElementById('pricing-meta');
   if (metaEl) metaEl.textContent = t(`pricing.meta.${activeCategory}`);
@@ -42,7 +62,7 @@ function renderPricingTable() {
   if (!tbody) return;
 
   tbody.innerHTML = DURATIONS.map((months) => {
-    const eurPrice = prices[months];
+    const eurPrice = planPrice(activeCategory, months, activeUsers);
     const displayTotal = currency === 'USD' ? eurPrice * EUR_TO_USD : eurPrice;
     const perMonth = displayTotal / months;
     const savingsPct = Math.round((1 - (eurPrice / months) / baseRate) * 100);
@@ -58,8 +78,8 @@ function renderPricingTable() {
         <td>${formatMoney(perMonth, currency)} <span class="permonth-suffix">${t('common.perMonth')}</span></td>
         <td>${savingsPct > 0 ? `<span class="savings-pill">-${savingsPct}%</span>` : '—'}</td>
         <td>
-          ${stripeEnabled ? `<a class="btn btn-primary btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}&provider=stripe">${t('pricing.table.action')}</a>` : ''}
-          <a class="btn btn-outline btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}">${t('pricing.table.action.polar')}</a>
+          ${showStripe ? `<a class="btn btn-primary btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}&provider=stripe">${t('pricing.table.action')}</a>` : ''}
+          <a class="btn btn-outline btn-sm" href="checkout.html?plan=${activeCategory}&months=${months}${usersParam}">${t('pricing.table.action.polar')}</a>
         </td>
       </tr>
     `;
@@ -86,8 +106,17 @@ function selectCategory(category) {
   renderPricingTable();
 }
 
-document.querySelectorAll('.pricing-tab').forEach((tab) => {
+function selectUsers(users) {
+  if (!USER_PRICE_PCT[users]) return;
+  activeUsers = users;
+  renderPricingTable();
+}
+
+document.querySelectorAll('.pricing-tab[data-category]').forEach((tab) => {
   tab.addEventListener('click', () => selectCategory(tab.getAttribute('data-category')));
+});
+document.querySelectorAll('.pricing-tab[data-users]').forEach((tab) => {
+  tab.addEventListener('click', () => selectUsers(Number(tab.getAttribute('data-users'))));
 });
 
 window.addEventListener('pp:locale-ready', renderPricingTable);

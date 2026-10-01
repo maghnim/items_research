@@ -19,7 +19,9 @@ function itemLabel(metadata) {
     if (metadata.category) return t('payment.item.trialplan').replace('{category}', category);
     return t(metadata.trialType === '7d' ? 'payment.item.trial7d' : 'payment.item.trial24h');
   }
-  return t('payment.item.plan').replace('{category}', category).replace('{months}', metadata.months);
+  const label = t('payment.item.plan').replace('{category}', category).replace('{months}', metadata.months);
+  const users = Number(metadata.users) || 1;
+  return users > 1 ? `${label} · ${t('pricing.users.n').replace('{n}', users)}` : label;
 }
 
 function addRow(tbody, label, value) {

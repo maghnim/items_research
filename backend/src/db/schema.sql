@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS users (
   polar_customer_id TEXT,
   plan_tier TEXT NOT NULL DEFAULT 'trial', -- trial | standard | premium | premiumplus | vip
   plan_duration_months INTEGER, -- billing term chosen at checkout: 1 | 3 | 6 | 12
+  plan_users INTEGER NOT NULL DEFAULT 1, -- users paid for at checkout: 1-4 (recorded, not enforced yet)
   plan_status TEXT NOT NULL DEFAULT 'pending_payment', -- pending_payment | active | past_due | canceled
   plan_expires_at TIMESTAMPTZ, -- Polar plans only: Polar has no auto-renewal, so expiry is tracked here
   trial_expires_at TIMESTAMPTZ, -- set when the account's one trial starts: now() + 24h (see services/trials.js)
@@ -76,6 +77,7 @@ ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS polar_customer_id TEXT;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_expires_at TIMESTAMPTZ;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS password_needs_setup BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS plan_users INTEGER NOT NULL DEFAULT 1;
 ALTER TABLE users ALTER COLUMN plan_status SET DEFAULT 'pending_payment';
 
 CREATE INDEX IF NOT EXISTS idx_products_user ON tracked_products(user_id);

@@ -58,13 +58,13 @@ router.post('/login', asyncHandler(async (req, res) => {
   const token = signToken(user.id);
   res.json({
     token,
-    user: { id: user.id, email: user.email, full_name: user.full_name, phone: user.phone, plan_tier: user.plan_tier, plan_status: user.plan_status, trial_expires_at: user.trial_expires_at },
+    user: { id: user.id, email: user.email, full_name: user.full_name, phone: user.phone, plan_tier: user.plan_tier, plan_status: user.plan_status, plan_users: user.plan_users, trial_expires_at: user.trial_expires_at },
   });
 }));
 
 router.get('/me', requireAuth, asyncHandler(async (req, res) => {
   const result = await db.query(
-    'SELECT id, email, full_name, phone, plan_tier, plan_status, trial_expires_at, plan_expires_at, created_at FROM users WHERE id = $1',
+    'SELECT id, email, full_name, phone, plan_tier, plan_status, plan_users, trial_expires_at, plan_expires_at, created_at FROM users WHERE id = $1',
     [req.userId]
   );
   if (result.rows.length === 0) {

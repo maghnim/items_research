@@ -1,9 +1,15 @@
-// Subscription pricing: 4 categories x 4 billing terms, base currency EUR.
+// Subscription pricing: 4 categories x 4 billing terms x 1-4 users, base currency EUR.
 // Feature limits (tracked-product count, scrape frequency) depend only on the
 // category — the billing term just changes how many months you pay for up front.
 
 const CATEGORIES = ['standard', 'premium', 'premiumplus', 'vip'];
 const DURATIONS = [1, 3, 6, 12];
+
+// Users per account. Extra users are charged at a growing discount on the 1-user price
+// (x1.8 = -10%, x2.55 = -15%, x3.2 = -20%), as percentages so prices stay exact cents.
+// The count is recorded on the account (users.plan_users); not enforced yet.
+const USERS = [1, 2, 3, 4];
+const USER_PRICE_PCT = { 1: 100, 2: 180, 3: 255, 4: 320 };
 
 // Every plan has a 24-hour trial of that plan (its full limits, see CATEGORY_LIMITS).
 // Free for Standard / Premium / Premium Plus; VIP's is a one-time €2.99 payment.
@@ -17,10 +23,10 @@ const TRIAL_PRICES_EUR = { standard: 0, premium: 0, premiumplus: 0, vip: 2.99 };
 const LEGACY_TRIAL_HOURS = { '24h': 24, '7d': 24 * 7 };
 
 const PRICES_EUR = {
-  standard: { 1: 9.99, 3: 19.99, 6: 29.99, 12: 45.99 },
-  premium: { 1: 10.99, 3: 25.99, 6: 39.99, 12: 49.99 },
-  premiumplus: { 1: 11.99, 3: 28.99, 6: 45.99, 12: 64.99 },
-  vip: { 1: 15.99, 3: 34.99, 6: 59.99, 12: 99.99 },
+  standard: { 1: 9.99, 3: 24.99, 6: 34.99, 12: 45.99 },
+  premium: { 1: 10.99, 3: 27.99, 6: 38.99, 12: 49.99 },
+  premiumplus: { 1: 11.99, 3: 32.99, 6: 48.99, 12: 64.99 },
+  vip: { 1: 15.99, 3: 44.99, 6: 69.99, 12: 99.99 },
 };
 
 const CATEGORY_LIMITS = {
@@ -31,8 +37,10 @@ const CATEGORY_LIMITS = {
   vip: { label: 'VIP', maxProducts: Infinity, checkEveryMinutes: 15 },
 };
 
-function isValidCombo(category, months) {
-  return CATEGORIES.indexOf(category) !== -1 && Object.prototype.hasOwnProperty.call(PRICES_EUR[category] || {}, months);
+function isValidCombo(category, months, users = 1) {
+  return CATEGORIES.indexOf(category) !== -1
+    && Object.prototype.hasOwnProperty.call(PRICES_EUR[category] || {}, months)
+    && USERS.indexOf(users) !== -1;
 }
 
 // null for an unknown category, 0 for a free trial.
@@ -40,9 +48,11 @@ function trialPriceFor(category) {
   return CATEGORIES.indexOf(category) === -1 ? null : TRIAL_PRICES_EUR[category];
 }
 
-function priceFor(category, months) {
-  if (!isValidCombo(category, months)) return null;
-  return PRICES_EUR[category][months];
+// Integer cents, rounded half up — frontend/js/pricing.js mirrors this exactly.
+function priceFor(category, months, users = 1) {
+  if (!isValidCombo(category, months, users)) return null;
+  const cents = Math.round(PRICES_EUR[category][months] * 100);
+  return Math.floor((cents * USER_PRICE_PCT[users] + 50) / 100) / 100;
 }
 
 function getCategoryLimits(category) {
@@ -58,6 +68,7 @@ function envKey(prefix, category, months) {
 module.exports = {
   CATEGORIES,
   DURATIONS,
+  USERS,
   PRICES_EUR,
   CATEGORY_LIMITS,
   TRIAL_HOURS,

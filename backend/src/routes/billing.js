@@ -41,8 +41,9 @@ const STRIPE_NOT_SET_UP = 'Card payment via Stripe is not available yet. Please 
 
 router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (req, res) => {
   const { category, months, locale } = req.body;
-  if (!isValidCombo(category, Number(months))) {
-    return res.status(400).json({ error: 'Unknown plan category or billing term.' });
+  const users = Number(req.body.users || 1);
+  if (!isValidCombo(category, Number(months), users)) {
+    return res.status(400).json({ error: 'Unknown plan category, billing term or number of users.' });
   }
 
   const productId = process.env.POLAR_PRODUCT_PLAN;
@@ -55,16 +56,16 @@ router.post('/polar/create-checkout-session', optionalAuth, asyncHandler(async (
   if (req.userId) {
     const userResult = await db.query('SELECT email FROM users WHERE id = $1', [req.userId]);
     customerEmail = userResult.rows[0]?.email;
-    metadata = { userId: req.userId, type: 'plan', category, months: String(months) };
+    metadata = { userId: req.userId, type: 'plan', category, months: String(months), users: String(users) };
   } else {
     // No account yet — Polar's own checkout form collects the email; the webhook
     // creates the account from it once payment succeeds.
-    metadata = { type: 'plan', category, months: String(months), guest: 'true' };
+    metadata = { type: 'plan', category, months: String(months), users: String(users), guest: 'true' };
   }
 
   const checkout = await createDynamicCheckout({
     productId,
-    amountEur: priceFor(category, Number(months)),
+    amountEur: priceFor(category, Number(months), users),
     successUrl: `${process.env.APP_URL}/payment-success.html?checkout_id={CHECKOUT_ID}`,
     customerEmail,
     metadata,
@@ -164,6 +165,7 @@ router.post('/polar/claim-account', asyncHandler(async (req, res) => {
       phone: user.phone,
       plan_tier: user.plan_tier,
       plan_status: user.plan_status,
+      plan_users: user.plan_users,
       trial_expires_at: user.trial_expires_at,
     },
   });
@@ -263,6 +265,11 @@ router.post('/stripe/create-checkout-session', asyncHandler(async (req, res) => 
   if (!isValidCombo(category, Number(months))) {
     return res.status(400).json({ error: 'Unknown plan category or billing term.' });
   }
+  // Stripe prices exist per (category, months) for 1 user only; multi-user plans go
+  // through Polar, which charges the computed amount (checkout.js falls back to it).
+  if (Number(req.body.users || 1) !== 1) {
+    return res.status(400).json({ error: 'Plans with more than 1 user are paid through the other checkout option.' });
+  }
 
   const priceId = stripePriceId(category, months);
   if (!priceId) {
@@ -335,7 +342,7 @@ router.post('/paypal/confirm', asyncHandler(async (req, res) => {
 
   // plan_expires_at = NULL: a subscription renews, so drop any expiry left by a trial.
   await db.query(
-    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
+    `UPDATE users SET paypal_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_users = 1, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
     [subscriptionId, category, months, req.userId]
   );
 

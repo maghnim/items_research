@@ -125,7 +125,7 @@ en: {
 
   'pricing.eyebrow': 'Pricing',
   'pricing.h2': 'Plans that scale with how many competitors you track',
-  'pricing.p': 'Prices in EUR. Choose a category, then the billing term that suits you.',
+  'pricing.p': 'Prices in EUR. Choose a category, the number of users, then the billing term that suits you.',
 
   'pricing.cat.standard': 'Standard',
   'pricing.cat.premium': 'Premium',
@@ -138,6 +138,14 @@ en: {
   'pricing.meta.vip': 'Unlimited tracked products · Checked every 15 minutes · API access',
   'pricing.trial.free': 'Try {plan} free for 24 hours',
   'pricing.trial.paid': 'Try {plan} for 24 hours — {price}',
+  'pricing.users.label': 'How many users?',
+  'pricing.users.1': '1 user',
+  'pricing.users.2': '2 users',
+  'pricing.users.3': '3 users',
+  'pricing.users.4': '4 users',
+  'pricing.users.n': '{n} users',
+  'pricing.users.hint': 'Each plan includes 1 user. Add users for your team, with a growing discount.',
+  'pricing.users.pricefor': 'Prices shown for {n} users',
 
   'pricing.table.term': 'Billing term',
   'pricing.table.price': 'Price',
@@ -476,7 +484,7 @@ fr: {
 
   'pricing.eyebrow': 'Tarifs',
   'pricing.h2': 'Des forfaits qui évoluent selon le nombre de concurrents suivis',
-  'pricing.p': 'Prix en euros. Choisissez une catégorie, puis la durée qui vous convient.',
+  'pricing.p': "Prix en euros. Choisissez une catégorie, le nombre d'utilisateurs, puis la durée qui vous convient.",
 
   'pricing.cat.standard': 'Standard',
   'pricing.cat.premium': 'Premium',
@@ -489,6 +497,14 @@ fr: {
   'pricing.meta.vip': 'Produits suivis illimités · Vérification toutes les 15 minutes · Accès API',
   'pricing.trial.free': 'Essayez {plan} gratuitement pendant 24 heures',
   'pricing.trial.paid': 'Essayez {plan} pendant 24 heures — {price}',
+  'pricing.users.label': "Combien d'utilisateurs ?",
+  'pricing.users.1': '1 utilisateur',
+  'pricing.users.2': '2 utilisateurs',
+  'pricing.users.3': '3 utilisateurs',
+  'pricing.users.4': '4 utilisateurs',
+  'pricing.users.n': '{n} utilisateurs',
+  'pricing.users.hint': 'Chaque formule inclut 1 utilisateur. Ajoutez des utilisateurs pour votre équipe, avec une remise croissante.',
+  'pricing.users.pricefor': 'Prix affichés pour {n} utilisateurs',
 
   'pricing.table.term': 'Durée',
   'pricing.table.price': 'Prix',

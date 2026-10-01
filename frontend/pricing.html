@@ -28,7 +28,7 @@
     <div class="section-head">
       <span class="eyebrow" data-i18n="pricing.eyebrow">Pricing</span>
       <h2 data-i18n="pricing.h2">Plans that scale with how many competitors you track</h2>
-      <p data-i18n="pricing.p">Prices in EUR. Choose a category, then the billing term that suits you.</p>
+      <p data-i18n="pricing.p">Prices in EUR. Choose a category, the number of users, then the billing term that suits you.</p>
     </div>
 
     <div class="pricing-tabs">
@@ -39,6 +39,16 @@
     </div>
 
     <p id="pricing-meta" class="pricing-meta"></p>
+
+    <p class="pricing-users-label" data-i18n="pricing.users.label">How many users?</p>
+    <div class="pricing-tabs pricing-users">
+      <button class="pricing-tab active" data-users="1" data-i18n="pricing.users.1">1 user</button>
+      <button class="pricing-tab" data-users="2"><span data-i18n="pricing.users.2">2 users</span> <span class="savings-pill">-10%</span></button>
+      <button class="pricing-tab" data-users="3"><span data-i18n="pricing.users.3">3 users</span> <span class="savings-pill">-15%</span></button>
+      <button class="pricing-tab" data-users="4"><span data-i18n="pricing.users.4">4 users</span> <span class="savings-pill">-20%</span></button>
+    </div>
+    <p class="pricing-users-hint" data-i18n="pricing.users.hint">Each plan includes 1 user. Add users for your team, with a growing discount.</p>
+    <p id="pricing-users-note" class="pricing-users-note"></p>
 
     <p style="text-align:center; margin:0 0 20px;">
       <a id="pricing-trial" class="btn btn-outline" href="checkout.html?plan=premium&trial=24h">Try Premium free for 24 hours</a>

@@ -3,7 +3,7 @@ const Stripe = require('stripe');
 const bcrypt = require('bcrypt');
 const crypto = require('crypto');
 const db = require('../db');
-const { CATEGORIES, DURATIONS, envKey } = require('../utils/pricing');
+const { CATEGORIES, DURATIONS, USERS, envKey } = require('../utils/pricing');
 const { applyPaidTrial } = require('../services/trials');
 const { verifyWebhookSignature } = require('../services/paypal');
 const { validateEvent, WebhookVerificationError } = require('@polar-sh/sdk/webhooks');
@@ -20,6 +20,16 @@ for (const category of CATEGORIES) {
     const priceId = process.env[envKey('STRIPE_PRICE', category, months)];
     if (priceId) PLAN_BY_STRIPE_PRICE[priceId] = { category, months };
   }
+}
+
+// Months arrive as text in checkout metadata; the queries below cast them with ::int —
+// using one untyped parameter as both a number and text fails ("inconsistent types").
+
+// Users paid for at checkout (metadata.users, see routes/billing.js). Checkouts created
+// before multi-user plans have no users field and were for 1 user.
+function planUsers(metadata) {
+  const users = Number(metadata.users);
+  return USERS.indexOf(users) === -1 ? 1 : users;
 }
 
 // NOTE: this route must receive the raw body (see server.js) for signature verification.
@@ -47,7 +57,7 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
           const months = session.metadata.months;
           // plan_expires_at = NULL: a subscription renews, so drop any expiry left by a trial.
           await db.query(
-            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
+            `UPDATE users SET stripe_subscription_id = $1, plan_tier = $2, plan_duration_months = $3, plan_users = 1, plan_status = 'active', plan_expires_at = NULL WHERE id = $4`,
             [subscriptionId, category, months, userId]
           );
         }
@@ -153,12 +163,13 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
         await db.query(
           `UPDATE users
            SET plan_tier = $1,
-               plan_duration_months = $2,
+               plan_duration_months = $2::int,
+               plan_users = $5,
                plan_status = 'active',
-               plan_expires_at = now() + ($2 || ' months')::interval,
+               plan_expires_at = now() + make_interval(months => $2::int),
                polar_customer_id = $3
            WHERE id = $4`,
-          [category, months, order.customerId, userId]
+          [category, months, order.customerId, userId, planUsers(metadata)]
         );
       } else if (metadata.type === 'plan' && metadata.guest === 'true') {
         // Guest checkout (pricing.html, no account required first) — see routes/billing.js.
@@ -174,12 +185,13 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
             await db.query(
               `UPDATE users
                SET plan_tier = $1,
-                   plan_duration_months = $2,
+                   plan_duration_months = $2::int,
+                   plan_users = $5,
                    plan_status = 'active',
-                   plan_expires_at = now() + ($2 || ' months')::interval,
+                   plan_expires_at = now() + make_interval(months => $2::int),
                    polar_customer_id = $3
                WHERE id = $4`,
-              [category, months, order.customerId, existing.rows[0].id]
+              [category, months, order.customerId, existing.rows[0].id, planUsers(metadata)]
             );
           } else {
             // Auto-create the account. password_hash is a random value nobody is ever told —
@@ -192,10 +204,10 @@ router.post('/polar', express.raw({ type: 'application/json' }), async (req, res
             await db.query(
               `INSERT INTO users (
                  email, password_hash, full_name, phone,
-                 plan_tier, plan_duration_months, plan_status, plan_expires_at,
+                 plan_tier, plan_duration_months, plan_users, plan_status, plan_expires_at,
                  polar_customer_id, password_needs_setup
-               ) VALUES ($1, $2, $3, $4, $5, $6, 'active', now() + ($6 || ' months')::interval, $7, true)`,
-              [email, passwordHash, fullName, phone, category, months, order.customerId]
+               ) VALUES ($1, $2, $3, $4, $5, $6::int, $8, 'active', now() + make_interval(months => $6::int), $7, true)`,
+              [email, passwordHash, fullName, phone, category, months, order.customerId, planUsers(metadata)]
             );
           }
         }

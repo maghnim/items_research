@@ -72,7 +72,10 @@ function renderStats(products) {
   document.getElementById('stat-active').textContent = products.filter((p) => p.is_active).length;
   const withPrice = products.filter((p) => p.last_price !== null);
   document.getElementById('stat-tracked').textContent = withPrice.length;
-  document.getElementById('stat-plan').textContent = (getUser()?.plan_tier || 'trial').toUpperCase();
+  const account = getUser() || {};
+  const users = account.plan_users || 1;
+  document.getElementById('stat-plan').textContent = (account.plan_tier || 'trial').toUpperCase()
+    + (users > 1 ? ` · ${t('pricing.users.n').replace('{n}', users)}` : '');
 }
 
 const CURRENCY_SYMBOLS = { USD: '$', EUR: '€', GBP: '£', MAD: 'DH', JPY: '¥', CHF: 'CHF', CAD: 'CA$', AUD: 'A$' };

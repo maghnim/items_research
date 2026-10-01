@@ -17,6 +17,7 @@ async function grantTrial(userId, category) {
     `UPDATE users
      SET plan_tier = $1,
          plan_duration_months = NULL,
+         plan_users = 1,
          plan_status = 'active',
          trial_type = '24h',
          trial_expires_at = now() + make_interval(hours => $2),
